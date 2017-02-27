@@ -1,6 +1,10 @@
 package pm.cli;
 
+import java.security.cert.Certificate;
+import java.security.Key;
 import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.*;
 import javax.xml.ws.*;
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
@@ -14,6 +18,7 @@ public class Client {
 
     private PasswordManager pm;
     private Scanner keyboardSc;
+    private KeyStore _ks;
     
     
     public static void main(String[] args) throws Exception {
@@ -76,7 +81,8 @@ public class Client {
     }
     
     public void register_user(){
-        
+        Key k = getPublicKey();
+    	pm.register(k);
     }
     
     public void save_password(byte[] domain, byte[] username, byte[] password){
@@ -88,5 +94,28 @@ public class Client {
         return null;
     }
 
-   
+
+    private void setKeyStore(KeyStore k){
+    	_ks = k;
+    }
+    
+    private KeyStore getKeyStore(){
+    	return _ks;
+    }
+    
+    private Key getPublicKey() {
+    	KeyStore keystore = getKeyStore();
+    	String alias = "myalias";
+    	Key key = keystore.getKey(alias, "password".toCharArray());
+    	if (key instanceof PrivateKey) {
+    	      // Get certificate of public key
+    	      Certificate cert = keystore.getCertificate(alias);
+
+    	      // Get public key
+    	      PublicKey publicKey = cert.getPublicKey();
+    	      return publicKey;
+    	 }
+    	
+    	throw new Exception("key");
+    }
 }
