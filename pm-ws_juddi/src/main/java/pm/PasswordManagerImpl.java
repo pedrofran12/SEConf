@@ -31,7 +31,7 @@ public class PasswordManagerImpl implements PasswordManager {
 	}
 	
 	public void put(Key publicKey, byte[] domain, byte[] username, byte[] password){
-		
+
 	}
 	
 	public byte[] get(Key publicKey, byte[] domain, byte[] username){
