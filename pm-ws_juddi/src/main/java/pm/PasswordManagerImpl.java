@@ -4,17 +4,8 @@ import javax.jws.WebMethod;
 import javax.jws.WebService;
 
 @WebService(endpointInterface = "pm.PasswordManager")
-public class PasswordManagerImpl implements PasswordManager, java.io.Serializable{
-	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-
-	public PasswordManagerImpl(){
+public class PasswordManagerImpl implements PasswordManager {
 		
-	}
-	
 	@WebMethod(exclude = true)
 	public void register(Key publicKey){
 		

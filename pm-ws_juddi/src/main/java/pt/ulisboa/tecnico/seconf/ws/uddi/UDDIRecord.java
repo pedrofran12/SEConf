@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.sdis.ws.uddi;
+package pt.ulisboa.tecnico.seconf.ws.uddi;
 
 /**
  * Immutable class that represents a simplified UDDI record.

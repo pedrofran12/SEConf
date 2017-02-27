@@ -1,8 +1,6 @@
 package pm;
 
 import javax.jws.WebService;
-import javax.crypto.*;
-import java.security.*;
 
 @WebService
 public interface PasswordManager {

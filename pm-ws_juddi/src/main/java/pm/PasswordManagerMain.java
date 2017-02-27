@@ -2,7 +2,7 @@ package pm;
 
 import javax.xml.ws.Endpoint;
 
-import pt.ulisboa.tecnico.sdis.ws.uddi.UDDINaming;
+import pt.ulisboa.tecnico.seconf.ws.uddi.UDDINaming;
 
 public class PasswordManagerMain {
 
