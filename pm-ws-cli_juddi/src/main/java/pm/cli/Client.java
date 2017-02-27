@@ -53,10 +53,19 @@ public class Client {
 	private Scanner keyboardSc;
 	private int winner = 0;
 	private int player = 1;
+*/
+
+
 
 	public Client(PasswordManager port) {
 		this.ttt = port;
 		keyboardSc = new Scanner(System.in);
+	}
+
+
+
+	public init(KeyStore ks /*, ....*/){
+		
 	}
 
 	public int readPlay() {
