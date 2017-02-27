@@ -37,7 +37,7 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 
-		<mainclass>pm.ws.PasswordManagerMain</mainclass>
+    <mainclass>pm.ws.PasswordManagerMain</mainclass>
 
 		<uddi.url>http://localhost:9090</uddi.url>
 		<ws.name>pm-ws</ws.name>

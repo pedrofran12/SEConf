@@ -22,7 +22,7 @@
 			for client code generation -->
 		<ws.url>http://localhost:8080/pm-ws/endpoint</ws.url>
 		<wsdl.url>${ws.url}?WSDL</wsdl.url>
-		<mainclass>pm.cli.Game</mainclass>
+		<mainclass>pm.cli.Client</mainclass>
 		<uddi.url>http://localhost:9090</uddi.url>
 		<ws.name>pm-ws</ws.name>
 	</properties>
