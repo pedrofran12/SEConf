@@ -21,7 +21,21 @@ public class PasswordManagerImpl implements PasswordManager {
 	}
 	
 	public byte[] get(Key publicKey, byte[] domain, byte[] username){
-		return null;
+		/*if(!usersKey.contains(publicKey)) {
+			throw new UnauthorizedRequestException(publicKey);
+		}*/
+		if(!domainUserExists(domain, username)) {
+			// throw new UsernameDomainDoesNotExistException(domain, username);
+		}
+		return password.get(username).get(domain);
+
+	}
+	
+	private boolean domainUserExists(byte[] domain, byte[] username) {
+		// this method might need to be changed do to some possible issues
+		// that can only happen during runtime
+		return password.containsKey(username) &&
+				password.get(username).containsKey(domain);
 	}
 	
 	
