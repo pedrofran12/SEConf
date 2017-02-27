@@ -1,13 +1,11 @@
-package pm;
+package pm.ws;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jws.WebMethod;
 import javax.jws.WebService;
-import java.nio.ByteBuffer;
 
-@WebService(endpointInterface = "pm.PasswordManager")
+@WebService(endpointInterface = "pm.ws.PasswordManager")
 public class PasswordManagerImpl implements PasswordManager {
 		
 	//private Map<ByteBuffer, Map<ByteBuffer, byte[]>> password = new HashMap<ByteBuffer, Map<ByteBuffer, byte[]>>();

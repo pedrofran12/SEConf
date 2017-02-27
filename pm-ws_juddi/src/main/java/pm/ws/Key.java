@@ -1,5 +1,5 @@
 
-package pm;
+package pm.ws;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;

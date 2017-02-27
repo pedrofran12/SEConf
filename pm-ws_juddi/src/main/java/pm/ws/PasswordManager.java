@@ -1,4 +1,4 @@
-package pm;
+package pm.ws;
 
 import javax.jws.WebService;
 
