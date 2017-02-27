@@ -2,6 +2,9 @@ package pm;
 
 import javax.jws.WebService;
 
+import pm.exception.InvalidKeyException;
+import pm.exception.KeyAlreadyExistsException;
+
 @WebService
 public interface PasswordManager {
 	//Map<,byte[]> password = new HashMap()<String,byte[]>;
@@ -12,7 +15,7 @@ public interface PasswordManager {
 	//int checkWinner();
 	
 	
-	void register(Key publicKey);
+	void register(Key publicKey) throws KeyAlreadyExistsException, InvalidKeyException;
 	void put(Key publicKey, byte[] domain, byte[] username, byte[] password);
 	byte[] get(Key publicKey, byte[] domain, byte[] username);
 }
