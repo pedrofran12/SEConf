@@ -2,6 +2,9 @@ package pm.exception;
 
 public class InvalidKeyException extends Exception {
     
+
+    private static final long serialVersionUID = 1L;
+
     private static String message = "Invalid Key used";
     
     public InvalidKeyException(String mess){
@@ -9,4 +12,6 @@ public class InvalidKeyException extends Exception {
     }
     public InvalidKeyException(){
         super(message);
+    }
 }
+
