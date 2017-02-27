@@ -45,29 +45,42 @@ public class Client {
 
 		// Start client
 		Client g = new Client(port);
-		g.playGame();
-		g.congratulate();
+		//g.playGame();
+		//g.congratulate();
 	}
 
-/*	private PasswordManager ttt;
+	private PasswordManager pm;
 	private Scanner keyboardSc;
-	private int winner = 0;
+/*	private int winner = 0;
 	private int player = 1;
 */
 
 
 
 	public Client(PasswordManager port) {
-		this.ttt = port;
+		this.pm = port;
 		keyboardSc = new Scanner(System.in);
 	}
 
 
 
-	public init(KeyStore ks /*, ....*/){
+	public void init(KeyStore ks /*, ....*/){
+		
+	}
+	
+	public void register_user(){
+		
+	}
+	
+	public void save_password(byte[] domain, byte[] username, byte[] password){
+		
+	}
+	
+	public byte[] retrieve_password(byte[] domain, byte[] username){
 		
 	}
 
+	/*
 	public int readPlay() {
 		int play;
 		do {
