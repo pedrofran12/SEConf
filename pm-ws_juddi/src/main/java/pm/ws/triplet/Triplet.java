@@ -1,6 +1,10 @@
 package pm.ws.triplet;
 
-public class Triplet extends TripletHeader {
+import java.io.Serializable;
+
+public class Triplet extends TripletHeader implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	private byte[] password;
 
 	public Triplet(byte[] dmn, byte[] uname, byte[] passwd) {

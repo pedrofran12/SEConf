@@ -1,8 +1,11 @@
 package pm.ws.triplet;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class TripletHeader {
+public class TripletHeader implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	private final byte[] domain;
 	private final byte[] username;
 	

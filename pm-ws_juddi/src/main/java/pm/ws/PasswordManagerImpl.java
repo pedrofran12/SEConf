@@ -5,11 +5,12 @@ import java.util.Map;
 
 import javax.jws.WebService;
 
+import pm.ws.triplet.TripletStore;
+
 @WebService(endpointInterface = "pm.ws.PasswordManager")
 public class PasswordManagerImpl implements PasswordManager {
 		
-	//private Map<ByteBuffer, Map<ByteBuffer, byte[]>> password = new HashMap<ByteBuffer, Map<ByteBuffer, byte[]>>();
-	private Map<byte[], Map<byte[], byte[]>> password = new HashMap<>();
+	private Map<Key, TripletStore> password = new HashMap<>();
 	
 	
 	public void register(Key publicKey){
@@ -24,18 +25,11 @@ public class PasswordManagerImpl implements PasswordManager {
 		/*if(!usersKey.contains(publicKey)) {
 			throw new UnauthorizedRequestException(publicKey);
 		}*/
-		if(!domainUserExists(domain, username)) {
-			// throw new UsernameDomainDoesNotExistException(domain, username);
+		if(!password.containsKey(publicKey)) {
+			
 		}
-		return password.get(username).get(domain);
+		return password.get(publicKey).get(domain, username);
 
-	}
-	
-	private boolean domainUserExists(byte[] domain, byte[] username) {
-		// this method might need to be changed do to some possible issues
-		// that can only happen during runtime
-		return password.containsKey(username) &&
-				password.get(username).containsKey(domain);
 	}
 	
 	
