@@ -14,7 +14,16 @@ public class PasswordManagerImpl implements PasswordManager {
 	
 	
 	public void register(Key publicKey){
-		
+		/*// VERSAO PARA NÃO MONGOLOIDES
+		if (!password.containsKey(publicKey)) {
+			password.put(publicKey, new TripletStore());
+		}
+		*/
+		// VERSÃO PARA MONGOLOIDES
+		if (password.containsKey(publicKey)) {
+			// throw new VaiTeTratarOhMongoloideException();
+		}
+		password.put(publicKey, new TripletStore());
 	}
 	
 	public void put(Key publicKey, byte[] domain, byte[] username, byte[] password){
@@ -22,14 +31,10 @@ public class PasswordManagerImpl implements PasswordManager {
 	}
 	
 	public byte[] get(Key publicKey, byte[] domain, byte[] username){
-		/*if(!usersKey.contains(publicKey)) {
-			throw new UnauthorizedRequestException(publicKey);
-		}*/
 		if(!password.containsKey(publicKey)) {
-			
+			// throw new UnauthorizedRequestException(publicKey);
 		}
 		return password.get(publicKey).get(domain, username);
-
 	}
 	
 	
