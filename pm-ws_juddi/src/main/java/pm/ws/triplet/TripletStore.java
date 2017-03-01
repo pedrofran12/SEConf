@@ -39,7 +39,7 @@ public class TripletStore implements Serializable {
 			passwd = t.getPassword();
 		}
 		rLock.unlock();
-		if (passwd != null) {
+		if (passwd == null) {
 			// throw new UnknowUsernameDomainException();
 		}
 		return passwd;
