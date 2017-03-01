@@ -5,7 +5,7 @@ import java.util.*;
 import javax.xml.ws.*;
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 
-import pt.ulisboa.tecnico.sdis.ws.uddi.UDDINaming;
+import pt.ulisboa.tecnico.seconf.ws.uddi.UDDINaming;
 
 import pm.ws.*;
 //import pm.exeception.*; // classes generated from WSDL
