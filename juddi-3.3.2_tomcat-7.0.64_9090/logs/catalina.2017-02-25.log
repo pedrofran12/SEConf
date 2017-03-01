@@ -1,0 +1,619 @@
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Server version:        Apache Tomcat/7.0.64
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Server built:          Aug 19 2015 17:18:06 UTC
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Server number:         7.0.64.0
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: OS Name:               Linux
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: OS Version:            4.8.0-39-generic
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Architecture:          amd64
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Java Home:             /usr/lib/jvm/java-8-openjdk-amd64/jre
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: JVM Version:           1.8.0_121-8u121-b13-0ubuntu1.16.10.2-b13
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: JVM Vendor:            Oracle Corporation
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: CATALINA_BASE:         /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: CATALINA_HOME:         /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djava.util.logging.config.file=/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/conf/logging.properties
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Xms1024m
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Xmx1024m
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -XX:MaxPermSize=512m
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -XX:PermSize=256M
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djavax.net.ssl.trustStore=truststore.jks
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djavax.net.ssl.trustStorePassword=password
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djavax.net.ssl.keyStore=../conf/keystore.jks
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djavax.net.ssl.keyStorePassword=password
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djava.endorsed.dirs=/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/endorsed
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Dcatalina.base=/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Dcatalina.home=/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djava.io.tmpdir=/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/temp
+fev 25, 2017 5:57:25 PM org.apache.catalina.core.AprLifecycleListener lifecycleEvent
+INFO: The APR based Apache Tomcat Native library which allows optimal performance in production environments was not found on the java.library.path: /usr/java/packages/lib/amd64:/usr/lib/x86_64-linux-gnu/jni:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/usr/lib/jni:/lib:/usr/lib
+fev 25, 2017 5:57:25 PM org.apache.coyote.AbstractProtocol init
+INFO: Initializing ProtocolHandler ["http-bio-9090"]
+fev 25, 2017 5:57:25 PM org.apache.coyote.AbstractProtocol init
+INFO: Initializing ProtocolHandler ["http-bio-8443"]
+fev 25, 2017 5:57:25 PM org.apache.coyote.AbstractProtocol init
+INFO: Initializing ProtocolHandler ["ajp-bio-8009"]
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.Catalina load
+INFO: Initialization processed in 520 ms
+fev 25, 2017 5:57:25 PM org.apache.catalina.core.StandardService startInternal
+INFO: Starting service Catalina
+fev 25, 2017 5:57:25 PM org.apache.catalina.core.StandardEngine startInternal
+INFO: Starting Servlet Engine: Apache Tomcat/7.0.64
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/examples
+fev 25, 2017 5:57:25 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 5:57:26 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/examples has finished in 692 ms
+fev 25, 2017 5:57:26 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/ROOT
+fev 25, 2017 5:57:26 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 5:57:26 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/ROOT has finished in 252 ms
+fev 25, 2017 5:57:26 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddiv3
+fev 25, 2017 5:57:27 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 5:57:36 PM org.apache.cxf.bus.spring.OldSpringSupport logWarning
+WARNING: Import of META-INF/cxf/cxf-extension-soap.xml has been deprecated and is unnecessary.
+fev 25, 2017 5:57:38 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromClass
+INFO: Creating Service {urn:uddi-org:api_v3_portType}UDDIInquiryService from class org.uddi.v3_service.UDDIInquiryPortType
+fev 25, 2017 5:57:39 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /inquiry
+fev 25, 2017 5:57:39 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromClass
+INFO: Creating Service {urn:uddi-org:api_v3_portType}UDDIPublicationService from class org.uddi.v3_service.UDDIPublicationPortType
+fev 25, 2017 5:57:39 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /publish
+fev 25, 2017 5:57:39 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromClass
+INFO: Creating Service {urn:uddi-org:api_v3_portType}UDDISecurityService from class org.uddi.v3_service.UDDISecurityPortType
+fev 25, 2017 5:57:39 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /security
+fev 25, 2017 5:57:39 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromClass
+INFO: Creating Service {urn:uddi-org:api_v3_portType}UDDISubscriptionService from class org.uddi.v3_service.UDDISubscriptionPortType
+fev 25, 2017 5:57:39 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /subscription
+fev 25, 2017 5:57:39 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromClass
+INFO: Creating Service {urn:uddi-org:api_v3_portType}UDDISubscriptionListenerService from class org.uddi.v3_service.UDDISubscriptionListenerPortType
+fev 25, 2017 5:57:40 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /subscription-listener
+fev 25, 2017 5:57:40 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromClass
+INFO: Creating Service {urn:uddi-org:v3_service}UDDICustodyTransferService from class org.uddi.v3_service.UDDICustodyTransferPortType
+fev 25, 2017 5:57:40 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /custody-transfer
+fev 25, 2017 5:57:40 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromClass
+INFO: Creating Service {http://impl.api.juddi.apache.org/}UDDIValueSetValidationImplService from class org.uddi.v3_service.UDDIValueSetValidationPortType
+fev 25, 2017 5:57:40 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /valueset-validation
+fev 25, 2017 5:57:40 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromClass
+INFO: Creating Service {http://impl.api.juddi.apache.org/}UDDIValueSetCachingImplService from class org.uddi.v3_service.UDDIValueSetCachingPortType
+fev 25, 2017 5:57:40 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /valueset-caching
+fev 25, 2017 5:57:40 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromClass
+INFO: Creating Service {urn:uddi-org:inquiry_v2}Inquire from class org.uddi.v2_service.Inquire
+fev 25, 2017 5:57:40 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /inquiryv2
+fev 25, 2017 5:57:40 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromClass
+INFO: Creating Service {urn:uddi-org:publication_v2}Publish from class org.uddi.v2_service.Publish
+fev 25, 2017 5:57:40 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /publishv2
+fev 25, 2017 5:57:40 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromWSDL
+INFO: Creating Service {urn:juddi-apache-org:v3_service}JUDDIApiService from WSDL: classpath:/juddi_api_v1.wsdl
+fev 25, 2017 5:57:41 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /juddi-api
+fev 25, 2017 5:57:41 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /inquiryRest
+fev 25, 2017 5:57:41 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: juddi-admin gui startup
+fev 25, 2017 5:57:41 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: Attempting to generate 256 bit AES key
+fev 25, 2017 5:57:41 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: Generation of 256 bit AES key successful
+fev 25, 2017 5:57:41 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: Storing key to /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddiv3/WEB-INF/config.properties
+fev 25, 2017 5:57:41 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddiv3 has finished in 14,960 ms
+fev 25, 2017 5:57:41 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddi-gui
+fev 25, 2017 5:57:41 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 5:57:41 PM org.apache.juddi.webconsole.StartupServlet contextInitialized
+INFO: juddi-gui startup
+fev 25, 2017 5:57:41 PM org.apache.juddi.webconsole.StartupServlet contextInitialized
+INFO: Attempting to generate 256 bit AES key
+fev 25, 2017 5:57:42 PM org.apache.juddi.webconsole.StartupServlet contextInitialized
+INFO: Generation of 256 bit AES key successful
+fev 25, 2017 5:57:42 PM org.apache.juddi.webconsole.StartupServlet contextInitialized
+INFO: Storing key to /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddi-gui/META-INF/config.properties
+fev 25, 2017 5:57:42 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddi-gui has finished in 803 ms
+fev 25, 2017 5:57:42 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/docs
+fev 25, 2017 5:57:42 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 5:57:42 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/docs has finished in 226 ms
+fev 25, 2017 5:57:42 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddiv3replication
+fev 25, 2017 5:57:43 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 5:57:46 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromClass
+INFO: Creating Service {urn:uddi-org:api_v3_portType}UDDI_Replication_PortType from class org.uddi.v3_service.UDDIReplicationPortType
+fev 25, 2017 5:57:48 PM org.apache.cxf.bus.spring.OldSpringSupport logWarning
+WARNING: Import of META-INF/cxf/cxf-extension-soap.xml has been deprecated and is unnecessary.
+fev 25, 2017 5:57:48 PM org.apache.cxf.endpoint.ServerImpl initDestination
+INFO: Setting the server's publish address to be /replication
+fev 25, 2017 5:57:48 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: juddi-admin gui startup
+fev 25, 2017 5:57:48 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: Attempting to generate 256 bit AES key
+fev 25, 2017 5:57:48 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: Generation of 256 bit AES key successful
+fev 25, 2017 5:57:48 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: Storing key to /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddiv3replication/WEB-INF/config.properties
+fev 25, 2017 5:57:48 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddiv3replication has finished in 6,209 ms
+fev 25, 2017 5:57:48 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/host-manager
+fev 25, 2017 5:57:48 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 5:57:48 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/host-manager has finished in 259 ms
+fev 25, 2017 5:57:48 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/manager
+fev 25, 2017 5:57:49 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 5:57:49 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/manager has finished in 261 ms
+fev 25, 2017 5:57:49 PM org.apache.coyote.AbstractProtocol start
+INFO: Starting ProtocolHandler ["http-bio-9090"]
+fev 25, 2017 5:57:49 PM org.apache.coyote.AbstractProtocol start
+INFO: Starting ProtocolHandler ["http-bio-8443"]
+fev 25, 2017 5:57:49 PM org.apache.coyote.AbstractProtocol start
+INFO: Starting ProtocolHandler ["ajp-bio-8009"]
+fev 25, 2017 5:57:49 PM org.apache.catalina.startup.Catalina start
+INFO: Server startup in 23759 ms
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Server version:        Apache Tomcat/7.0.64
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Server built:          Aug 19 2015 17:18:06 UTC
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Server number:         7.0.64.0
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: OS Name:               Linux
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: OS Version:            4.8.0-39-generic
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Architecture:          amd64
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Java Home:             /usr/lib/jvm/java-8-openjdk-amd64/jre
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: JVM Version:           1.8.0_121-8u121-b13-0ubuntu1.16.10.2-b13
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: JVM Vendor:            Oracle Corporation
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: CATALINA_BASE:         /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: CATALINA_HOME:         /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djava.util.logging.config.file=/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/conf/logging.properties
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Xms1024m
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Xmx1024m
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -XX:MaxPermSize=512m
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -XX:PermSize=256M
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djavax.net.ssl.trustStore=truststore.jks
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djavax.net.ssl.trustStorePassword=password
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djavax.net.ssl.keyStore=../conf/keystore.jks
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djavax.net.ssl.keyStorePassword=password
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djava.endorsed.dirs=/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/endorsed
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Dcatalina.base=/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Dcatalina.home=/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.VersionLoggerListener log
+INFO: Command line argument: -Djava.io.tmpdir=/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/temp
+fev 25, 2017 6:45:15 PM org.apache.catalina.core.AprLifecycleListener lifecycleEvent
+INFO: The APR based Apache Tomcat Native library which allows optimal performance in production environments was not found on the java.library.path: /usr/java/packages/lib/amd64:/usr/lib/x86_64-linux-gnu/jni:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/usr/lib/jni:/lib:/usr/lib
+fev 25, 2017 6:45:15 PM org.apache.coyote.AbstractProtocol init
+INFO: Initializing ProtocolHandler ["http-bio-9090"]
+fev 25, 2017 6:45:15 PM org.apache.coyote.AbstractProtocol init
+SEVERE: Failed to initialize end point associated with ProtocolHandler ["http-bio-9090"]
+java.net.BindException: Endereço já em uso (Bind failed) <null>:9090
+	at org.apache.tomcat.util.net.JIoEndpoint.bind(JIoEndpoint.java:413)
+	at org.apache.tomcat.util.net.AbstractEndpoint.init(AbstractEndpoint.java:651)
+	at org.apache.coyote.AbstractProtocol.init(AbstractProtocol.java:434)
+	at org.apache.coyote.http11.AbstractHttp11JsseProtocol.init(AbstractHttp11JsseProtocol.java:119)
+	at org.apache.catalina.connector.Connector.initInternal(Connector.java:978)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.core.StandardService.initInternal(StandardService.java:559)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.core.StandardServer.initInternal(StandardServer.java:821)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.startup.Catalina.load(Catalina.java:638)
+	at org.apache.catalina.startup.Catalina.load(Catalina.java:663)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.catalina.startup.Bootstrap.load(Bootstrap.java:280)
+	at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:454)
+Caused by: java.net.BindException: Endereço já em uso (Bind failed)
+	at java.net.PlainSocketImpl.socketBind(Native Method)
+	at java.net.AbstractPlainSocketImpl.bind(AbstractPlainSocketImpl.java:387)
+	at java.net.ServerSocket.bind(ServerSocket.java:375)
+	at java.net.ServerSocket.<init>(ServerSocket.java:237)
+	at java.net.ServerSocket.<init>(ServerSocket.java:181)
+	at org.apache.tomcat.util.net.DefaultServerSocketFactory.createSocket(DefaultServerSocketFactory.java:49)
+	at org.apache.tomcat.util.net.JIoEndpoint.bind(JIoEndpoint.java:400)
+	... 17 more
+
+fev 25, 2017 6:45:15 PM org.apache.catalina.core.StandardService initInternal
+SEVERE: Failed to initialize connector [Connector[HTTP/1.1-9090]]
+org.apache.catalina.LifecycleException: Failed to initialize component [Connector[HTTP/1.1-9090]]
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:106)
+	at org.apache.catalina.core.StandardService.initInternal(StandardService.java:559)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.core.StandardServer.initInternal(StandardServer.java:821)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.startup.Catalina.load(Catalina.java:638)
+	at org.apache.catalina.startup.Catalina.load(Catalina.java:663)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.catalina.startup.Bootstrap.load(Bootstrap.java:280)
+	at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:454)
+Caused by: org.apache.catalina.LifecycleException: Protocol handler initialization failed
+	at org.apache.catalina.connector.Connector.initInternal(Connector.java:980)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	... 12 more
+Caused by: java.net.BindException: Endereço já em uso (Bind failed) <null>:9090
+	at org.apache.tomcat.util.net.JIoEndpoint.bind(JIoEndpoint.java:413)
+	at org.apache.tomcat.util.net.AbstractEndpoint.init(AbstractEndpoint.java:651)
+	at org.apache.coyote.AbstractProtocol.init(AbstractProtocol.java:434)
+	at org.apache.coyote.http11.AbstractHttp11JsseProtocol.init(AbstractHttp11JsseProtocol.java:119)
+	at org.apache.catalina.connector.Connector.initInternal(Connector.java:978)
+	... 13 more
+Caused by: java.net.BindException: Endereço já em uso (Bind failed)
+	at java.net.PlainSocketImpl.socketBind(Native Method)
+	at java.net.AbstractPlainSocketImpl.bind(AbstractPlainSocketImpl.java:387)
+	at java.net.ServerSocket.bind(ServerSocket.java:375)
+	at java.net.ServerSocket.<init>(ServerSocket.java:237)
+	at java.net.ServerSocket.<init>(ServerSocket.java:181)
+	at org.apache.tomcat.util.net.DefaultServerSocketFactory.createSocket(DefaultServerSocketFactory.java:49)
+	at org.apache.tomcat.util.net.JIoEndpoint.bind(JIoEndpoint.java:400)
+	... 17 more
+
+fev 25, 2017 6:45:15 PM org.apache.coyote.AbstractProtocol init
+INFO: Initializing ProtocolHandler ["http-bio-8443"]
+fev 25, 2017 6:45:15 PM org.apache.coyote.AbstractProtocol init
+SEVERE: Failed to initialize end point associated with ProtocolHandler ["http-bio-8443"]
+java.net.BindException: Endereço já em uso (Bind failed) <null>:8443
+	at org.apache.tomcat.util.net.JIoEndpoint.bind(JIoEndpoint.java:413)
+	at org.apache.tomcat.util.net.AbstractEndpoint.init(AbstractEndpoint.java:651)
+	at org.apache.coyote.AbstractProtocol.init(AbstractProtocol.java:434)
+	at org.apache.coyote.http11.AbstractHttp11JsseProtocol.init(AbstractHttp11JsseProtocol.java:119)
+	at org.apache.catalina.connector.Connector.initInternal(Connector.java:978)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.core.StandardService.initInternal(StandardService.java:559)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.core.StandardServer.initInternal(StandardServer.java:821)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.startup.Catalina.load(Catalina.java:638)
+	at org.apache.catalina.startup.Catalina.load(Catalina.java:663)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.catalina.startup.Bootstrap.load(Bootstrap.java:280)
+	at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:454)
+Caused by: java.net.BindException: Endereço já em uso (Bind failed)
+	at java.net.PlainSocketImpl.socketBind(Native Method)
+	at java.net.AbstractPlainSocketImpl.bind(AbstractPlainSocketImpl.java:387)
+	at java.net.ServerSocket.bind(ServerSocket.java:375)
+	at java.net.ServerSocket.<init>(ServerSocket.java:237)
+	at java.net.ServerSocket.<init>(ServerSocket.java:181)
+	at javax.net.ssl.SSLServerSocket.<init>(SSLServerSocket.java:136)
+	at sun.security.ssl.SSLServerSocketImpl.<init>(SSLServerSocketImpl.java:113)
+	at sun.security.ssl.SSLServerSocketFactoryImpl.createServerSocket(SSLServerSocketFactoryImpl.java:87)
+	at org.apache.tomcat.util.net.jsse.JSSESocketFactory.createSocket(JSSESocketFactory.java:219)
+	at org.apache.tomcat.util.net.JIoEndpoint.bind(JIoEndpoint.java:400)
+	... 17 more
+
+fev 25, 2017 6:45:15 PM org.apache.catalina.core.StandardService initInternal
+SEVERE: Failed to initialize connector [Connector[HTTP/1.1-8443]]
+org.apache.catalina.LifecycleException: Failed to initialize component [Connector[HTTP/1.1-8443]]
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:106)
+	at org.apache.catalina.core.StandardService.initInternal(StandardService.java:559)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.core.StandardServer.initInternal(StandardServer.java:821)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.startup.Catalina.load(Catalina.java:638)
+	at org.apache.catalina.startup.Catalina.load(Catalina.java:663)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.catalina.startup.Bootstrap.load(Bootstrap.java:280)
+	at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:454)
+Caused by: org.apache.catalina.LifecycleException: Protocol handler initialization failed
+	at org.apache.catalina.connector.Connector.initInternal(Connector.java:980)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	... 12 more
+Caused by: java.net.BindException: Endereço já em uso (Bind failed) <null>:8443
+	at org.apache.tomcat.util.net.JIoEndpoint.bind(JIoEndpoint.java:413)
+	at org.apache.tomcat.util.net.AbstractEndpoint.init(AbstractEndpoint.java:651)
+	at org.apache.coyote.AbstractProtocol.init(AbstractProtocol.java:434)
+	at org.apache.coyote.http11.AbstractHttp11JsseProtocol.init(AbstractHttp11JsseProtocol.java:119)
+	at org.apache.catalina.connector.Connector.initInternal(Connector.java:978)
+	... 13 more
+Caused by: java.net.BindException: Endereço já em uso (Bind failed)
+	at java.net.PlainSocketImpl.socketBind(Native Method)
+	at java.net.AbstractPlainSocketImpl.bind(AbstractPlainSocketImpl.java:387)
+	at java.net.ServerSocket.bind(ServerSocket.java:375)
+	at java.net.ServerSocket.<init>(ServerSocket.java:237)
+	at java.net.ServerSocket.<init>(ServerSocket.java:181)
+	at javax.net.ssl.SSLServerSocket.<init>(SSLServerSocket.java:136)
+	at sun.security.ssl.SSLServerSocketImpl.<init>(SSLServerSocketImpl.java:113)
+	at sun.security.ssl.SSLServerSocketFactoryImpl.createServerSocket(SSLServerSocketFactoryImpl.java:87)
+	at org.apache.tomcat.util.net.jsse.JSSESocketFactory.createSocket(JSSESocketFactory.java:219)
+	at org.apache.tomcat.util.net.JIoEndpoint.bind(JIoEndpoint.java:400)
+	... 17 more
+
+fev 25, 2017 6:45:15 PM org.apache.coyote.AbstractProtocol init
+INFO: Initializing ProtocolHandler ["ajp-bio-8009"]
+fev 25, 2017 6:45:15 PM org.apache.coyote.AbstractProtocol init
+SEVERE: Failed to initialize end point associated with ProtocolHandler ["ajp-bio-8009"]
+java.net.BindException: Endereço já em uso (Bind failed) <null>:8009
+	at org.apache.tomcat.util.net.JIoEndpoint.bind(JIoEndpoint.java:413)
+	at org.apache.tomcat.util.net.AbstractEndpoint.init(AbstractEndpoint.java:651)
+	at org.apache.coyote.AbstractProtocol.init(AbstractProtocol.java:434)
+	at org.apache.catalina.connector.Connector.initInternal(Connector.java:978)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.core.StandardService.initInternal(StandardService.java:559)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.core.StandardServer.initInternal(StandardServer.java:821)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.startup.Catalina.load(Catalina.java:638)
+	at org.apache.catalina.startup.Catalina.load(Catalina.java:663)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.catalina.startup.Bootstrap.load(Bootstrap.java:280)
+	at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:454)
+Caused by: java.net.BindException: Endereço já em uso (Bind failed)
+	at java.net.PlainSocketImpl.socketBind(Native Method)
+	at java.net.AbstractPlainSocketImpl.bind(AbstractPlainSocketImpl.java:387)
+	at java.net.ServerSocket.bind(ServerSocket.java:375)
+	at java.net.ServerSocket.<init>(ServerSocket.java:237)
+	at java.net.ServerSocket.<init>(ServerSocket.java:181)
+	at org.apache.tomcat.util.net.DefaultServerSocketFactory.createSocket(DefaultServerSocketFactory.java:49)
+	at org.apache.tomcat.util.net.JIoEndpoint.bind(JIoEndpoint.java:400)
+	... 16 more
+
+fev 25, 2017 6:45:15 PM org.apache.catalina.core.StandardService initInternal
+SEVERE: Failed to initialize connector [Connector[AJP/1.3-8009]]
+org.apache.catalina.LifecycleException: Failed to initialize component [Connector[AJP/1.3-8009]]
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:106)
+	at org.apache.catalina.core.StandardService.initInternal(StandardService.java:559)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.core.StandardServer.initInternal(StandardServer.java:821)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	at org.apache.catalina.startup.Catalina.load(Catalina.java:638)
+	at org.apache.catalina.startup.Catalina.load(Catalina.java:663)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.catalina.startup.Bootstrap.load(Bootstrap.java:280)
+	at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:454)
+Caused by: org.apache.catalina.LifecycleException: Protocol handler initialization failed
+	at org.apache.catalina.connector.Connector.initInternal(Connector.java:980)
+	at org.apache.catalina.util.LifecycleBase.init(LifecycleBase.java:102)
+	... 12 more
+Caused by: java.net.BindException: Endereço já em uso (Bind failed) <null>:8009
+	at org.apache.tomcat.util.net.JIoEndpoint.bind(JIoEndpoint.java:413)
+	at org.apache.tomcat.util.net.AbstractEndpoint.init(AbstractEndpoint.java:651)
+	at org.apache.coyote.AbstractProtocol.init(AbstractProtocol.java:434)
+	at org.apache.catalina.connector.Connector.initInternal(Connector.java:978)
+	... 13 more
+Caused by: java.net.BindException: Endereço já em uso (Bind failed)
+	at java.net.PlainSocketImpl.socketBind(Native Method)
+	at java.net.AbstractPlainSocketImpl.bind(AbstractPlainSocketImpl.java:387)
+	at java.net.ServerSocket.bind(ServerSocket.java:375)
+	at java.net.ServerSocket.<init>(ServerSocket.java:237)
+	at java.net.ServerSocket.<init>(ServerSocket.java:181)
+	at org.apache.tomcat.util.net.DefaultServerSocketFactory.createSocket(DefaultServerSocketFactory.java:49)
+	at org.apache.tomcat.util.net.JIoEndpoint.bind(JIoEndpoint.java:400)
+	... 16 more
+
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.Catalina load
+INFO: Initialization processed in 468 ms
+fev 25, 2017 6:45:15 PM org.apache.catalina.core.StandardService startInternal
+INFO: Starting service Catalina
+fev 25, 2017 6:45:15 PM org.apache.catalina.core.StandardEngine startInternal
+INFO: Starting Servlet Engine: Apache Tomcat/7.0.64
+fev 25, 2017 6:45:15 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/examples
+fev 25, 2017 6:45:16 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 6:45:16 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/examples has finished in 665 ms
+fev 25, 2017 6:45:16 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/ROOT
+fev 25, 2017 6:45:16 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 6:45:16 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/ROOT has finished in 216 ms
+fev 25, 2017 6:45:16 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddiv3
+fev 25, 2017 6:45:18 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 6:45:20 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: juddi-admin gui startup
+fev 25, 2017 6:45:20 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: Attempting to generate 256 bit AES key
+fev 25, 2017 6:45:20 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: Generation of 256 bit AES key successful
+fev 25, 2017 6:45:20 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: Storing key to /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddiv3/WEB-INF/config.properties
+fev 25, 2017 6:45:20 PM org.apache.catalina.core.StandardContext startInternal
+SEVERE: One or more listeners failed to start. Full details will be found in the appropriate container log file
+fev 25, 2017 6:45:20 PM org.apache.catalina.core.StandardContext startInternal
+SEVERE: Context [/juddiv3] startup failed due to previous errors
+fev 25, 2017 6:45:20 PM org.apache.juddi.adminconsole.StartupServlet contextDestroyed
+INFO: Cleaning up juddi-admin
+fev 25, 2017 6:45:20 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddiv3 has finished in 4,147 ms
+fev 25, 2017 6:45:20 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddi-gui
+fev 25, 2017 6:45:21 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 6:45:21 PM org.apache.juddi.webconsole.StartupServlet contextInitialized
+INFO: juddi-gui startup
+fev 25, 2017 6:45:21 PM org.apache.juddi.webconsole.StartupServlet contextInitialized
+INFO: Attempting to generate 256 bit AES key
+fev 25, 2017 6:45:21 PM org.apache.juddi.webconsole.StartupServlet contextInitialized
+INFO: Generation of 256 bit AES key successful
+fev 25, 2017 6:45:21 PM org.apache.juddi.webconsole.StartupServlet contextInitialized
+INFO: Storing key to /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddi-gui/META-INF/config.properties
+fev 25, 2017 6:45:21 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddi-gui has finished in 1,081 ms
+fev 25, 2017 6:45:21 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/docs
+fev 25, 2017 6:45:22 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 6:45:22 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/docs has finished in 384 ms
+fev 25, 2017 6:45:22 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddiv3replication
+fev 25, 2017 6:45:23 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 6:45:24 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: juddi-admin gui startup
+fev 25, 2017 6:45:24 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: Attempting to generate 256 bit AES key
+fev 25, 2017 6:45:24 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: Generation of 256 bit AES key successful
+fev 25, 2017 6:45:24 PM org.apache.juddi.adminconsole.StartupServlet contextInitialized
+INFO: Storing key to /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddiv3replication/WEB-INF/config.properties
+fev 25, 2017 6:45:24 PM org.apache.catalina.core.StandardContext startInternal
+SEVERE: One or more listeners failed to start. Full details will be found in the appropriate container log file
+fev 25, 2017 6:45:24 PM org.apache.catalina.core.StandardContext startInternal
+SEVERE: Context [/juddiv3replication] startup failed due to previous errors
+fev 25, 2017 6:45:24 PM org.apache.juddi.adminconsole.StartupServlet contextDestroyed
+INFO: Cleaning up juddi-admin
+fev 25, 2017 6:45:24 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/juddiv3replication has finished in 2,214 ms
+fev 25, 2017 6:45:24 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/host-manager
+fev 25, 2017 6:45:24 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 6:45:24 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/host-manager has finished in 217 ms
+fev 25, 2017 6:45:24 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/manager
+fev 25, 2017 6:45:24 PM org.apache.catalina.startup.TldConfig execute
+INFO: At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+fev 25, 2017 6:45:24 PM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deployment of web application directory /home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/webapps/manager has finished in 155 ms
+fev 25, 2017 6:45:24 PM org.apache.catalina.startup.Catalina start
+INFO: Server startup in 9131 ms
+fev 25, 2017 6:45:24 PM org.apache.catalina.core.StandardServer await
+SEVERE: StandardServer.await: create[localhost:8005]: 
+java.net.BindException: Endereço já em uso (Bind failed)
+	at java.net.PlainSocketImpl.socketBind(Native Method)
+	at java.net.AbstractPlainSocketImpl.bind(AbstractPlainSocketImpl.java:387)
+	at java.net.ServerSocket.bind(ServerSocket.java:375)
+	at java.net.ServerSocket.<init>(ServerSocket.java:237)
+	at org.apache.catalina.core.StandardServer.await(StandardServer.java:427)
+	at org.apache.catalina.startup.Catalina.await(Catalina.java:777)
+	at org.apache.catalina.startup.Catalina.start(Catalina.java:723)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.catalina.startup.Bootstrap.start(Bootstrap.java:321)
+	at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:455)
+
+fev 25, 2017 6:45:24 PM org.apache.coyote.AbstractProtocol pause
+INFO: Pausing ProtocolHandler ["http-bio-9090"]
+fev 25, 2017 6:45:24 PM org.apache.coyote.AbstractProtocol pause
+INFO: Pausing ProtocolHandler ["http-bio-8443"]
+fev 25, 2017 6:45:24 PM org.apache.coyote.AbstractProtocol pause
+INFO: Pausing ProtocolHandler ["ajp-bio-8009"]
+fev 25, 2017 6:45:24 PM org.apache.catalina.core.StandardService stopInternal
+INFO: Stopping service Catalina
+fev 25, 2017 6:45:24 PM org.apache.juddi.webconsole.StartupServlet contextDestroyed
+INFO: Cleaning up juddi-gui
+fev 25, 2017 6:45:24 PM org.apache.coyote.AbstractProtocol stop
+INFO: Stopping ProtocolHandler ["http-bio-9090"]
+fev 25, 2017 6:45:24 PM org.apache.coyote.AbstractProtocol destroy
+INFO: Destroying ProtocolHandler ["http-bio-9090"]
+fev 25, 2017 6:45:24 PM org.apache.coyote.AbstractProtocol stop
+INFO: Stopping ProtocolHandler ["http-bio-8443"]
+fev 25, 2017 6:45:24 PM org.apache.coyote.AbstractProtocol destroy
+INFO: Destroying ProtocolHandler ["http-bio-8443"]
+fev 25, 2017 6:45:24 PM org.apache.coyote.AbstractProtocol stop
+INFO: Stopping ProtocolHandler ["ajp-bio-8009"]
+fev 25, 2017 6:45:24 PM org.apache.coyote.AbstractProtocol destroy
+INFO: Destroying ProtocolHandler ["ajp-bio-8009"]
+fev 25, 2017 6:48:41 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromWSDL
+INFO: Creating Service {urn:uddi-org:v3_service}UDDI_Service from WSDL: file:/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/work/Catalina/localhost/juddi-gui/loader/uddi_v3_service.wsdl
+fev 25, 2017 6:48:42 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromWSDL
+INFO: Creating Service {urn:uddi-org:v3_service}UDDI_Service from WSDL: file:/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/work/Catalina/localhost/juddi-gui/loader/uddi_v3_service.wsdl
+fev 25, 2017 6:48:43 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromWSDL
+INFO: Creating Service {urn:uddi-org:v3_service}UDDI_Service from WSDL: file:/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/work/Catalina/localhost/juddi-gui/loader/uddi_v3_service.wsdl
+fev 25, 2017 6:48:43 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromWSDL
+INFO: Creating Service {urn:uddi-org:v3_service}UDDI_Service from WSDL: file:/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/work/Catalina/localhost/juddi-gui/loader/uddi_v3_service.wsdl
+fev 25, 2017 6:48:43 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromWSDL
+INFO: Creating Service {urn:uddi-org:v3_service}UDDI_Service from WSDL: file:/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/work/Catalina/localhost/juddi-gui/loader/uddi_v3_service.wsdl
+fev 25, 2017 6:48:43 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromWSDL
+INFO: Creating Service {urn:uddi-org:v3_service}UDDI_Service from WSDL: file:/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/work/Catalina/localhost/juddi-gui/loader/uddi_v3_service.wsdl
+fev 25, 2017 6:48:43 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromWSDL
+INFO: Creating Service {urn:uddi-org:v3_service}UDDI_Service from WSDL: file:/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/work/Catalina/localhost/juddi-gui/loader/uddi_v3_service.wsdl
+fev 25, 2017 6:48:43 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromWSDL
+INFO: Creating Service {urn:uddi-org:v3_service}UDDI_Service from WSDL: file:/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/work/Catalina/localhost/juddi-gui/loader/uddi_v3_service.wsdl
+fev 25, 2017 6:48:43 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromWSDL
+INFO: Creating Service {urn:uddi-org:v3_service}UDDI_Service from WSDL: file:/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/work/Catalina/localhost/juddi-gui/loader/uddi_v3_service.wsdl
+fev 25, 2017 6:48:43 PM org.apache.cxf.service.factory.ReflectionServiceFactoryBean buildServiceFromWSDL
+INFO: Creating Service {urn:uddi-org:v3_service}UDDI_Service from WSDL: file:/home/pedro/Documentos/juddi-3.3.2_tomcat-7.0.64_9090/work/Catalina/localhost/juddi-gui/loader/uddi_v3_service.wsdl
+fev 25, 2017 6:49:12 PM org.apache.cxf.phase.PhaseInterceptorChain doDefaultLogging
+INFO: Application {urn:uddi-org:api_v3_portType}UDDISubscriptionService#{urn:uddi-org:api_v3_portType}get_subscriptions has thrown exception, unwinding now: org.apache.juddi.v3.error.AuthTokenRequiredException: Authentication is required for this API call
+fev 25, 2017 7:15:14 PM org.apache.cxf.phase.PhaseInterceptorChain doDefaultLogging
+INFO: Application {urn:uddi-org:api_v3_portType}UDDIPublicationService#{urn:uddi-org:api_v3_portType}get_assertionStatusReport has thrown exception, unwinding now: org.apache.juddi.v3.error.AuthTokenExpiredException: The authentication token is expired
