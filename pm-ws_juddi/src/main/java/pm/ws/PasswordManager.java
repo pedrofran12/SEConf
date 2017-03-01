@@ -2,16 +2,11 @@ package pm.ws;
 
 import javax.jws.WebService;
 
+import pm.exception.InvalidKeyException;
+
 @WebService
 public interface PasswordManager {
-	//String currentBoard();
-
-	//boolean play(int row, int column, int player);
-
-	//int checkWinner();
-	
-	
 	void register(Key publicKey);
-	void put(Key publicKey, byte[] domain, byte[] username, byte[] password);
+	void put(Key publicKey, byte[] domain, byte[] username, byte[] password) throws InvalidKeyException;
 	byte[] get(Key publicKey, byte[] domain, byte[] username);
 }
