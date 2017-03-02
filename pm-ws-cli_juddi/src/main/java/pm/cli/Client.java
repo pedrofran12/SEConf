@@ -16,6 +16,7 @@ import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 
 import pt.ulisboa.tecnico.seconf.ws.uddi.UDDINaming;
 
+
 import pm.ws.*;// classes generated from WSDL
 
 public class Client {
@@ -105,10 +106,17 @@ public class Client {
     	}
     }
 
-	public byte[] retrieve_password(byte[] domain, byte[] username) {
+  public byte[] retrieve_password(byte[] domain, byte[] username){
+      byte[] password = null;
 
-		return null;
-	}
+      try{
+          password = _pm.get(getPublicKey(), domain, username);
+      }catch(PasswordManagerException pme){
+          pme.printStackTrace();
+      }
+
+      return password;
+  }
 
 	private KeyStore getKeyStore() {
 		return _ks;
