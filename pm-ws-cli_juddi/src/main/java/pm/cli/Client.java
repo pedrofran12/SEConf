@@ -1,121 +1,147 @@
 package pm.cli;
 
 import java.security.cert.Certificate;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.security.Key;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.UnrecoverableKeyException;
 import java.util.*;
 import javax.xml.ws.*;
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 
-import pt.ulisboa.tecnico.sdis.ws.uddi.UDDINaming;
+import pt.ulisboa.tecnico.seconf.ws.uddi.UDDINaming;
 
-import pm.ws.*;
-//import pm.exeception.*; // classes generated from WSDL
+import pm.ws.*;// classes generated from WSDL
 
 public class Client {
 
-    private PasswordManager pm;
-    private Scanner keyboardSc;
-    private KeyStore _ks;
-    
-    
-    public static void main(String[] args) throws Exception {
-        // Check arguments
-        if (args.length < 2) {
-            System.err.println("Argument(s) missing!");
-            System.err.printf("Usage: java %s uddiURL name%n", Client.class.getName());
-            return;
-        }
+	private PasswordManager pm;
+	private Scanner keyboardSc;
+	private KeyStore _ks;
+	private String alias;
+	private char[] password;
 
-        String uddiURL = args[0];
-        String name = args[1];
+	public static void main(String[] args) throws Exception {
+		// Check arguments
+		if (args.length < 2) {
+			System.err.println("Argument(s) missing!");
+			System.err.printf("Usage: java %s uddiURL name%n", Client.class.getName());
+			return;
+		}
 
-        System.out.printf("Contacting UDDI at %s%n", uddiURL);
-        UDDINaming uddiNaming = new UDDINaming(uddiURL);
+		String uddiURL = args[0];
+		String name = args[1];
 
-        System.out.printf("Looking for '%s'%n", name);
-        String endpointAddress = uddiNaming.lookup(name);
+		System.out.printf("Contacting UDDI at %s%n", uddiURL);
+		UDDINaming uddiNaming = new UDDINaming(uddiURL);
 
-        if (endpointAddress == null) {
-            System.out.println("Not found!");
-            return;
-        } else {
-            System.out.printf("Found %s%n", endpointAddress);
-        }
+		System.out.printf("Looking for '%s'%n", name);
+		String endpointAddress = uddiNaming.lookup(name);
 
-        System.out.println("Creating stub ...");
-        PasswordManagerImplService service = new PasswordManagerImplService();
-        PasswordManager port = service.getPasswordManagerImplPort();
+		if (endpointAddress == null) {
+			System.out.println("Not found!");
+			return;
+		} else {
+			System.out.printf("Found %s%n", endpointAddress);
+		}
 
-        System.out.println("Setting endpoint address ...");
-        BindingProvider bindingProvider = (BindingProvider) port;
-        Map<String, Object> requestContext = bindingProvider.getRequestContext();
-        requestContext.put(ENDPOINT_ADDRESS_PROPERTY, endpointAddress);
+		System.out.println("Creating stub ...");
+		PasswordManagerImplService service = new PasswordManagerImplService();
+		PasswordManager port = service.getPasswordManagerImplPort();
 
-        Client g = new Client(port);
-        
-        g.doCode();
-    }
+		System.out.println("Setting endpoint address ...");
+		BindingProvider bindingProvider = (BindingProvider) port;
+		Map<String, Object> requestContext = bindingProvider.getRequestContext();
+		requestContext.put(ENDPOINT_ADDRESS_PROPERTY, endpointAddress);
 
-    private void doCode(){
-        //Here is the code for your test//
-        //just do: pm.something();
-    }
-    
+		Client c = new Client(port);
 
+		// ****** obter keystore ******
+		String alias = "client";
+		char[] password = "benfica".toCharArray();
+		KeyStore ks = KeyStore.getInstance("JKS");
+		InputStream readStream = new FileInputStream("src/main/resources/KeyStore.jks");
+		ks.load(readStream, password);
+		java.security.Key key = ks.getKey(alias, password);
+		readStream.close();
+		// ****************************
+		c.init(ks, alias, password);
 
+		c.doCode();
+	}
 
+	private void doCode() {
+		// Here is the code for your test//
+		// just do: pm.something();
+	}
 
+	public Client(PasswordManager port) {
+		this.pm = port;
+		keyboardSc = new Scanner(System.in);
+	}
 
-    public Client(PasswordManager port) {
-        this.pm = port;
-        keyboardSc = new Scanner(System.in);
-    }
+	public void init(KeyStore ks, String alias, char[] password) {
+		setKeyStore(ks);
+		setKeyStoreAlias(alias);
+		setKeyStorePassword(password);
+	}
 
+	public void register_user() throws Exception {
+		Key k = getPublicKey();
+		//pm.register(k);
+	}
 
+	public void save_password(byte[] domain, byte[] username, byte[] password) {
 
-    public void init(KeyStore ks /*, ....*/){
-        
-    }
-    
-    public void register_user(){
-        Key k = getPublicKey();
-    	pm.register(k);
-    }
-    
-    public void save_password(byte[] domain, byte[] username, byte[] password){
-        
-    }
-    
-    public byte[] retrieve_password(byte[] domain, byte[] username){
-        
-        return null;
-    }
+	}
 
+	public byte[] retrieve_password(byte[] domain, byte[] username) {
 
-    private void setKeyStore(KeyStore k){
-    	_ks = k;
-    }
-    
-    private KeyStore getKeyStore(){
-    	return _ks;
-    }
-    
-    private Key getPublicKey() {
-    	KeyStore keystore = getKeyStore();
-    	String alias = "myalias";
-    	Key key = keystore.getKey(alias, "password".toCharArray());
-    	if (key instanceof PrivateKey) {
-    	      // Get certificate of public key
-    	      Certificate cert = keystore.getCertificate(alias);
+		return null;
+	}
 
-    	      // Get public key
-    	      PublicKey publicKey = cert.getPublicKey();
-    	      return publicKey;
-    	 }
-    	
-    	throw new Exception("key");
-    }
+	private KeyStore getKeyStore() {
+		return _ks;
+	}
+
+	private Key getPublicKey() throws Exception {
+		KeyStore keystore = getKeyStore();
+		String alias = getKeyStoreAlias();
+		Key key = keystore.getKey(alias, getKeyStorePassword());
+		if (key instanceof PrivateKey) {
+			// Get certificate of public key
+			Certificate cert = keystore.getCertificate(alias);
+
+			// Get public key
+			PublicKey publicKey = cert.getPublicKey();
+			return new pm.ws.Key(publicKey);
+		}
+
+		throw new Exception("key");
+	}
+
+	private void setKeyStore(KeyStore k) {
+		_ks = k;
+	}
+
+	private void setKeyStoreAlias(String alias) {
+		this.alias = alias;
+	}
+
+	private void setKeyStorePassword(char[] password) {
+		this.password = password;
+	}
+
+	private String getKeyStoreAlias() {
+		return alias;
+	}
+
+	private char[] getKeyStorePassword() {
+		return password;
+	}
 }
