@@ -2,6 +2,7 @@ package pm.ws.triplet;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import pm.exception.*;
 
 public class TripletHeader implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -10,12 +11,13 @@ public class TripletHeader implements Serializable {
 	private final byte[] username;
 	
 	
-	public TripletHeader(byte[] dmn, byte[] uname) {
+	public TripletHeader(byte[] dmn, byte[] uname) 
+	                        throws InvalidDomainException,InvalidUsernameException{
 		if (dmn == null) {
-			// throw new InvalidDomainException();
+			throw new InvalidDomainException();
 		}
 		if (uname == null) {
-			// throw new InvalidUsernameException();
+			throw new InvalidUsernameException();
 		}
 		domain = dmn;
 		username = uname;

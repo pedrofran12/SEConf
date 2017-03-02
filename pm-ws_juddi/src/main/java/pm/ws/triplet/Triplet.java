@@ -8,7 +8,7 @@ public class Triplet extends TripletHeader implements Serializable {
 	
 	private byte[] password;
 
-	public Triplet(byte[] dmn, byte[] uname, byte[] passwd) throws InvalidPasswordException  {
+	public Triplet(byte[] dmn, byte[] uname, byte[] passwd) throws InvalidPasswordException, InvalidDomainException, InvalidUsernameException  {
 		super(dmn, uname);
 		setPassword(passwd);
 	}

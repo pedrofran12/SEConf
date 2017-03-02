@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlType;
 public class InvalidPasswordException extends PasswordManagerException {
     private static final long serialVersionUID = 1L;
 
-    private static final String message = "Invalid Key used";
+    private static final String message = "Invalid password used";
     
     public InvalidPasswordException(String message){
         super(message);
