@@ -20,7 +20,7 @@ import pm.ws.*;// classes generated from WSDL
 
 public class Client {
 
-	private PasswordManager pm;
+	private PasswordManager _pm;
 	private Scanner keyboardSc;
 	private KeyStore _ks;
 	private String alias;
@@ -71,7 +71,7 @@ public class Client {
 		readStream.close();
 		// ****************************
 		c.init(ks, alias, password);
-
+		c.register_user();
 		c.doCode();
 	}
 
@@ -81,7 +81,7 @@ public class Client {
 	}
 
 	public Client(PasswordManager port) {
-		this.pm = port;
+		_pm = port;
 		keyboardSc = new Scanner(System.in);
 	}
 
@@ -92,8 +92,8 @@ public class Client {
 	}
 
 	public void register_user() throws Exception {
-		Key k = getPublicKey();
-		//pm.register(k);
+		pm.ws.Key k = getPublicKey();
+		_pm.register(k);
 	}
 
 	public void save_password(byte[] domain, byte[] username, byte[] password) {
@@ -109,7 +109,7 @@ public class Client {
 		return _ks;
 	}
 
-	private Key getPublicKey() throws Exception {
+	private pm.ws.Key getPublicKey() throws Exception {
 		KeyStore keystore = getKeyStore();
 		String alias = getKeyStoreAlias();
 		Key key = keystore.getKey(alias, getKeyStorePassword());
@@ -119,7 +119,10 @@ public class Client {
 
 			// Get public key
 			PublicKey publicKey = cert.getPublicKey();
-			return new pm.ws.Key(publicKey);
+			pm.ws.Key k = new pm.ws.Key();
+			k.setKey(Base64.getEncoder().encodeToString(publicKey.getEncoded()));
+			k.setAlgorithm(publicKey.getAlgorithm());
+			return k;
 		}
 
 		throw new Exception("key");
