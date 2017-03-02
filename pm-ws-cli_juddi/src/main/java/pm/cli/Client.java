@@ -99,7 +99,7 @@ public class Client {
 	public void save_password(byte[] domain, byte[] username, byte[] password){
     	Key key = getPublicKey();
     	try {
-    		pm.put(key, domain, username, password);
+    		_pm.put(key, domain, username, password);
     	} catch (PasswordManagerException pme) {
     		pme.printStackTrace();
     	}
