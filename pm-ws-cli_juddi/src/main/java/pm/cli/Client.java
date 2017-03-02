@@ -8,7 +8,6 @@ import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 import pt.ulisboa.tecnico.seconf.ws.uddi.UDDINaming;
 
 import pm.ws.*;
-//import pm.exeception.*; // classes generated from WSDL
 
 public class Client {
 
@@ -84,6 +83,13 @@ public class Client {
     }
     
     public byte[] retrieve_password(byte[] domain, byte[] username){
+        byte[] password = null;
+        
+        try{
+            password = pm.get(getPublicKey(), domain, username);
+        }catch(PasswordManagerException pme){
+            pme.printStackTrace();
+        }
         
         return null;
     }
