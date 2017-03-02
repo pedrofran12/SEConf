@@ -91,7 +91,7 @@ public class Client {
             pme.printStackTrace();
         }
         
-        return null;
+        return password;
     }
 
    
