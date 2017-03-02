@@ -30,7 +30,14 @@ JUDDI:
 > ./juddi-3.3.2_tomcat-7.0.64_9090/bin/startup.sh
 
 
-[2] Construir e executar **servidor**
+[2] Criar KeyStore para clientes
+
+JUDDI:
+> keytool -genkey -alias client -keyalg RSA -keystore KeyStore.jks -keysize 2048
+
+
+
+[3] Construir e executar **servidor**
 
 > cd pm-ws_juddi/
 
@@ -39,7 +46,7 @@ JUDDI:
 > mvn exec:java
 
 
-[3] Construir **cliente**
+[4] Construir **cliente**
 
 > cd pm-ws-cli_juddi/
 
