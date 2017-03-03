@@ -12,9 +12,9 @@ import java.security.MessageDigest;
 
 public class HandlerFunction {
 
+    // - DIGEST - //
     public static MessageDigest Object2Hash(MessageDigest md, Object obj) throws Exception {// needs
                                                                                             // revision
-
         if (md == null) {
             md = MessageDigest.getInstance("SHA-256");
         }
@@ -50,4 +50,8 @@ public class HandlerFunction {
 
         return in.readObject();
     }
+    
+    // - KEY PART - 
+    
+    
 }
