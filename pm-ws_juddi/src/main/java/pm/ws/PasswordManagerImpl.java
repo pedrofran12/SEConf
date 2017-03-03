@@ -14,9 +14,9 @@ public class PasswordManagerImpl implements PasswordManager {
 	private Map<Key, TripletStore> password = new HashMap<>();
 	
 	
-	public void register(Key publicKey) throws PasswordAlreadyExistsException{
+	public void register(Key publicKey) throws KeyAlreadyExistsException{
 		if (password.containsKey(publicKey)) {
-			throw new PasswordAlreadyExistsException();
+			throw new KeyAlreadyExistsException();
 		}
 		password.put(publicKey, new TripletStore());
 	}
@@ -29,7 +29,7 @@ public class PasswordManagerImpl implements PasswordManager {
 	
 	public byte[] get(Key publicKey, byte[] domain, byte[] username) throws PasswordManagerException{
 		if(!password.containsKey(publicKey)) {
-			throw new UnauthorizedRequestException();
+			throw new InvalidKeyException();
 		}
 		return password.get(publicKey).get(domain, username);
 	}
