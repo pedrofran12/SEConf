@@ -159,4 +159,27 @@ public class Client {
 	private char[] getKeyStorePassword() {
 		return password;
 	}
+	
+	private pm.ws.Key getPrivateKey() throws Exception{
+	    //Adapted from javaDOC//
+	    
+	    //Get PrivateKey!
+	    KeyStore.ProtectionParameter protParam =
+	            new KeyStore.PasswordProtection(getKeyStorePassword());
+	    
+	    KeyStore ks = getKeyStore();
+	    
+	    KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry)
+	            ks.getEntry(getKeyStoreAlias(), protParam);
+	    
+	    PrivateKey privateKey = pkEntry.getPrivateKey();
+	    
+
+        // Convert PrivateKey to pm.ws.Key
+        pm.ws.Key pk = new pm.ws.Key();
+        pk.setKey(Base64.getEncoder().encodeToString(privateKey.getEncoded()));
+        pk.setAlgorithm(privateKey.getAlgorithm());
+	    
+	    return pk;
+	}
 }
