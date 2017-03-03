@@ -10,7 +10,7 @@ import pm.exception.UnauthorizedRequestException;
 
 @WebService
 public interface PasswordManager {
-	void register(Key publicKey) throws KeyAlreadyExistsException;
+	void register(Key publicKey) throws PasswordManagerException;
 	void put(Key publicKey, byte[] domain, byte[] username, byte[] password) throws PasswordManagerException;
 	byte[] get(Key publicKey, byte[] domain, byte[] username) throws PasswordManagerException;
 }

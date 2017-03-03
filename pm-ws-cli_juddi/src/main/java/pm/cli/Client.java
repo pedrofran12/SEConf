@@ -1,8 +1,11 @@
 package pm.cli;
 
 import java.security.cert.Certificate;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -73,6 +76,9 @@ public class Client {
 		// ****************************
 		c.init(ks, alias, password);
 		c.register_user();
+		c.save_password("fuckybook.com".getBytes(), "pedro".getBytes(), "chupa".getBytes());
+
+		System.out.println(new String(c.retrieve_password("fuckybook.com".getBytes(), "pedro".getBytes())));
 		c.doCode();
 	}
 
@@ -131,9 +137,15 @@ public class Client {
 
 			// Get public key
 			PublicKey publicKey = cert.getPublicKey();
+			
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			ObjectOutput out = new ObjectOutputStream(bos);
+			out.writeObject(publicKey);
+			out.flush();
+			out.close();
 			pm.ws.Key k = new pm.ws.Key();
-			k.setKey(Base64.getEncoder().encodeToString(publicKey.getEncoded()));
-			k.setAlgorithm(publicKey.getAlgorithm());
+			k.setKey(bos.toByteArray());
+			bos.close();
 			return k;
 		}
 

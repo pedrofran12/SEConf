@@ -29,15 +29,17 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "key", propOrder = {
-    "key",
-    "algorithm"
+    "key"
 })
 public class Key {
-
+/*
     @XmlElement(required = true)
     protected String key;
     @XmlElement(required = true)
     protected String algorithm;
+  */
+	@XmlElement(required = true)
+	protected byte[] key;
 
     /**
      * Gets the value of the key property.
@@ -47,7 +49,7 @@ public class Key {
      *     {@link String }
      *     
      */
-    public String getKey() {
+    public byte[] getKey() {
         return key;
     }
 
@@ -59,32 +61,7 @@ public class Key {
      *     {@link String }
      *     
      */
-    public void setKey(String value) {
+    public void setKey(byte[] value) {
         this.key = value;
     }
-
-    /**
-     * Gets the value of the algorithm property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getAlgorithm() {
-        return algorithm;
-    }
-
-    /**
-     * Sets the value of the algorithm property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setAlgorithm(String value) {
-        this.algorithm = value;
-    }
-
 }
