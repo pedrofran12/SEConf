@@ -1,14 +1,21 @@
 package pm.handler;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.security.Key;
+import java.security.KeyStore;
 import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.Certificate;
 import java.util.Iterator;
 import java.util.Set;
 
 import javax.xml.soap.SOAPHeader;
 import javax.xml.ws.handler.HandlerResolver;
-
+import javax.jws.HandlerChain;
 import javax.xml.namespace.QName;
 import javax.xml.soap.*;
 import javax.xml.ws.handler.MessageContext;
@@ -20,8 +27,8 @@ import org.w3c.dom.NodeList;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
-
-public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
+@HandlerChain(file="/handler-chain.xml")
+public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 	
     public static final String HEADER_KEY = "key";
     public static final String HEADER_KEY_NS = "urn:key";
@@ -32,6 +39,8 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
 	@Override
 	public boolean handleMessage(SOAPMessageContext smc) {
+		System.out.println(getMessage(smc));
+
         Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
         String operation = smc.get(MessageContext.WSDL_OPERATION).toString();
         System.out.println("Outbound = " + outbound + "\n\n\n\n");
@@ -40,23 +49,27 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
         	if(outbound){
             	final String plainText = getMessage(smc);
     	        final byte[] plainBytes = plainText.getBytes();
+    			System.out.println(getMessage(smc));
 
     	        //SEGURANCA : MAC
     	        HandlerSecurity security = new HandlerSecurity();
     	        System.out.println("=======================\n\n\n\n\n");
+    			System.out.println(getMessage(smc));
+    			
     	        // make MAC
     	        byte[] cipherDigest = security.makeSignature(plainBytes);
+    			System.out.println(getMessage(smc));
 
     	        // verify the MAC
     	        //boolean result = security.verifyMAC(cipherDigest, plainBytes, key);
     	        //System.out.println("MAC is " + (result ? "right" : "wrong"));
+    			System.out.println(getMessage(smc));
 
-    	        addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));    		
+    	        addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));  
+
 
         	}
         	else{
-        		System.out.println(getMessage(smc));
-
         		//message that is going to be sent from client to server
 
         		//obter mac value
@@ -81,7 +94,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
 
     	        //SEGURANCA : MAC
-    	        HandlerSecurity security = new HandlerSecurity();
+    	        /*HandlerSecurity security = new HandlerSecurity();
     	        System.out.println("=======================\n\n\n\n\n");
 
     	        // Key do cliente
@@ -101,6 +114,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
     	        if(!result)
     	        	return false;
+    	        	*/
         	}
         }
         catch(Exception e){
