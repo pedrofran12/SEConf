@@ -31,6 +31,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 import javax.xml.ws.handler.soap.SOAPMessageContext;
 
 import pm.exception.InvalidKeyException;
@@ -135,25 +136,17 @@ public class HandlerSecurity {
     }
 	
 	
-	private java.security.Key keyToKey(byte[] k) throws InvalidKeyException {
+    private java.security.Key keyToKey(byte[] k) throws Exception {
 		try{
 			ByteArrayInputStream bis = new ByteArrayInputStream(k);
 			ObjectInput in = new ObjectInputStream(bis);
+			java.security.Key key = (java.security.Key) in.readObject();
 			in.close();
 			bis.close();
-			pm.ws.Key key = (pm.ws.Key) in.readObject();
-			
-			ByteArrayInputStream bis2 = new ByteArrayInputStream(key.getKey());
-			ObjectInput in2 = new ObjectInputStream(bis2);
-			in2.close();
-			bis2.close();
-			return (java.security.Key)in2.readObject();
-			//return (java.security.Key) in.readObject();
-			
+			return key;
 		}
 		catch(Exception e){
-			e.printStackTrace();
-			throw new InvalidKeyException();
+			throw e;
 		}
 	}
     

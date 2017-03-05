@@ -3,6 +3,7 @@ package pm.handler;
 import java.io.ByteArrayOutputStream;
 import java.security.Key;
 import java.security.PrivateKey;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -37,7 +38,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
         System.out.println("Method = " + operation + "\n\n\n\n");
         try{
         	if(outbound){
-        		/*
+        
             	final String plainText = getMessage(smc);
     	        final byte[] plainBytes = plainText.getBytes();
 
@@ -52,9 +53,10 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     	        //System.out.println("MAC is " + (result ? "right" : "wrong"));
 
     	        addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));    		
-        		 */
+        		
         	}
         	else{
+        		
         		System.out.println(getMessage(smc));
 
         		//message that is going to be sent from client to server
@@ -88,7 +90,8 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     	        SOAPMessage msg = smc.getMessage();
     	        SOAPPart sp = msg.getSOAPPart();
     	        SOAPEnvelope se = sp.getEnvelope();
-    	        byte[] publicKeyClient = getBodyElement(smc, "key").getBytes();
+    	        byte[] byteElement = getBodyElement(smc, "key").getBytes();
+    	        byte[] publicKeyClient = Base64.getDecoder().decode(byteElement);
     	        
     	        System.out.println("=======================\n\n\n\n\n");
     	        
@@ -100,6 +103,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
     	        if(!result)
     	        	return false;
+    	        	
         	}
         }
         catch(Exception e){

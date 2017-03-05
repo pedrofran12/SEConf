@@ -39,12 +39,15 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 
 	@Override
 	public boolean handleMessage(SOAPMessageContext smc) {
+		System.out.println(getMessage(smc));
+
         Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
         String operation = smc.get(MessageContext.WSDL_OPERATION).toString();
         System.out.println("Outbound = " + outbound + "\n\n\n\n");
         System.out.println("Method = " + operation + "\n\n\n\n");
         try{
         	if(outbound){
+        		
             	final String plainText = getMessage(smc);
     	        final byte[] plainBytes = plainText.getBytes();
 
@@ -63,7 +66,6 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
     	        System.out.println(getMessage(smc));
         	}
         	else{
-        		/*
         		//message that is going to be sent from client to server
 
         		//obter mac value
@@ -104,12 +106,12 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
     	        
     	        
     	        // verify the MAC
-    	        boolean result = security.verifySignature(cipherDigest, plainBytes);//, publicKeyServer);
+    	        boolean result = security.verifySignature(cipherDigest, plainBytes/*, publicKeyServer*/);
     	        System.out.println("MAC is " + (result ? "right" : "wrong"));
 
     	        if(!result)
     	        	return false;
-	        	*/
+    	        	
         	}
         }
         catch(Exception e){

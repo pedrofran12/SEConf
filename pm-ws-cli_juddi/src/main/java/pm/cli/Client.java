@@ -16,6 +16,7 @@ import java.security.UnrecoverableKeyException;
 import java.util.*;
 
 import javax.jws.HandlerChain;
+import javax.xml.bind.DatatypeConverter;
 import javax.xml.ws.*;
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 
@@ -80,7 +81,7 @@ public class Client {
 		c.init(ks, alias, password);
 		c.register_user();
 		c.save_password("fuckybook.com".getBytes(), "pedro".getBytes(), "chupa".getBytes());
-		System.out.println(printHexBinary(("fuckybook.com".getBytes())));
+		System.out.println(Base64.getEncoder().encodeToString("fuckybook.com".getBytes()));
 		System.out.println(new String(c.retrieve_password("fuckybook.com".getBytes(), "pedro".getBytes())));
 		c.doCode();
 	}
