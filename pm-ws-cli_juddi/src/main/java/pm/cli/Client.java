@@ -18,8 +18,7 @@ import javax.xml.ws.*;
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 
 import pt.ulisboa.tecnico.seconf.ws.uddi.UDDINaming;
-
-
+import pm.exception.cli.AlreadyExistsLoggedUserException;
 import pm.ws.*;// classes generated from WSDL
 
 public class Client {
@@ -92,7 +91,9 @@ public class Client {
 		keyboardSc = new Scanner(System.in);
 	}
 
-	public void init(KeyStore ks, String alias, char[] password) {
+	public void init(KeyStore ks, String alias, char[] password) throws AlreadyExistsLoggedUserException {
+		if(isSessionAlive())
+			throw new AlreadyExistsLoggedUserException();
 		setKeyStore(ks);
 		setKeyStoreAlias(alias);
 		setKeyStorePassword(password);
@@ -111,20 +112,32 @@ public class Client {
     	}
     }
 
-  public byte[] retrieve_password(byte[] domain, byte[] username){
-      byte[] password = null;
+	public byte[] retrieve_password(byte[] domain, byte[] username){
+	    byte[] password = null;
+	
+	    try{
+	        password = _pm.get(getPublicKey(), domain, username);
+	    }catch(Exception pme){
+	        pme.printStackTrace();
+	    }
+	
+	    return password;
+	}
 
-      try{
-          password = _pm.get(getPublicKey(), domain, username);
-      }catch(Exception pme){
-          pme.printStackTrace();
-      }
-
-      return password;
-  }
-
+  
+	public void close() {
+		setKeyStore(null);
+		setKeyStoreAlias(null);
+		setKeyStorePassword(null);
+	}
+  
 	private KeyStore getKeyStore() {
 		return _ks;
+	}
+	
+	
+	private boolean isSessionAlive(){
+		return getKeyStore()!=null && getKeyStoreAlias()!=null && getKeyStorePassword()!=null;
 	}
 
 	private pm.ws.Key getPublicKey() throws Exception {
