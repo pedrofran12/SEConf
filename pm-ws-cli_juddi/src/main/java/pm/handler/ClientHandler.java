@@ -295,6 +295,7 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
                 e.printStackTrace();
             }
         }
+        timeClient.close();
         if(ti!=null){
             return ti.getReturnTime();
         }
