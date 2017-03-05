@@ -2,6 +2,7 @@ package pm.handler;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,8 +11,10 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.security.Key;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -21,6 +24,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
 import javax.crypto.KeyGenerator;
@@ -36,33 +40,68 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 public class HandlerSecurity {
 
-	private PrivateKey _privateKey;
-	private PublicKey _publicKey;
+	private PrivateKey _privateKeyClient;
+	private PublicKey _publicKeyServer;
 	private String keyPath = ".";
 	
 	
 	public HandlerSecurity() throws IOException, NoSuchAlgorithmException{
 		try{
-	        //Key do cliente
+	        //Key do servidor
+	        System.out.println("Reading key from file " + keyPath + " ...");
+	        //FileInputStream fis = new FileInputStream(keyPath + "/ServerPublic.key");
+	        byte[] keyBytes = Files.readAllBytes(new File(keyPath + "/ServerPublic.key").toPath());
+	        //byte[] encoded = new byte[fis.available()];
+	        //fis.read(encoded);
+	        //fis.close();
+	        
+	        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+	        KeyFactory kf = KeyFactory.getInstance("RSA");
+	        
+	        
+	        _publicKeyServer = kf.generatePublic(spec);
+	        System.out.println(_publicKeyServer.toString() + "\n\n\n\n\n\n===");
+
+			/*
+	        System.out.println("Reading key from file " + keyPath + " ...");
+	        FileInputStream fis = new FileInputStream(keyPath + "/ServerPublic.key");
+	        byte[] encoded = new byte[fis.available()];
+	        fis.read(encoded);
+	        fis.close();
+
+	        KeyFactory kf = KeyFactory.getInstance("RSA");
+
+	        _publicKey = kf.generatePublic(new SecretKeySpec(encoded, "RSA"));
+	        System.out.println(_publicKey.toString() + "\n\n\n\n\n\n===");
+	        */
+	        
 	        String alias = "client";
 			char[] password = "benfica".toCharArray();
 			KeyStore ks = KeyStore.getInstance("JKS");
 			InputStream readStream = new FileInputStream("src/main/resources/KeyStore.jks");
 			ks.load(readStream, password);
-			_privateKey = (PrivateKey) ks.getKey(alias, password);
-	        readStream.close();
+			java.security.Key key = ks.getKey(alias, password);
+			readStream.close();
+			
+			
+			KeyStore keystore = ks;
+			_privateKeyClient = (PrivateKey) keystore.getKey(alias, password);
+			
+
 		}
 		catch(Exception e){
+			e.printStackTrace();;
 		}
+		
 	}
 	
 	
 	public PublicKey getPublicKey(){
-		return _publicKey;
+		return _publicKeyServer;
 	}
 	
 	private PrivateKey getPrivateKey(){
-		return _privateKey;
+		return _privateKeyClient;
 	}
 	
 	
@@ -79,9 +118,8 @@ public class HandlerSecurity {
     /** auxiliary method to calculate new digest from text and compare it to the
          to deciphered digest */
     public boolean verifySignature(byte[] cipherDigest,
-    								byte[] bytes, 
-    								byte[] key) throws Exception {
-    	PublicKey k = (PublicKey) keyToKey(key);
+    								byte[] bytes) throws Exception {
+    	PublicKey k = getPublicKey();
         Signature cipher = Signature.getInstance("SHA256withRSA");
         cipher.initVerify(k);
         cipher.update(bytes);
@@ -109,12 +147,13 @@ public class HandlerSecurity {
 		try{
 			ByteArrayInputStream bis = new ByteArrayInputStream(k);
 			ObjectInput in = new ObjectInputStream(bis);
+			java.security.Key key = (java.security.Key) in.readObject();
 			in.close();
 			bis.close();
-			return (java.security.Key) in.readObject();
+			return key;
 		}
 		catch(Exception e){
-			throw new Exception();
+			throw e;
 		}
 	}
     

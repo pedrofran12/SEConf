@@ -6,7 +6,6 @@ import java.security.PrivateKey;
 import java.util.Iterator;
 import java.util.Set;
 
-import javax.xml.soap.SOAPHeader;
 import javax.xml.ws.handler.HandlerResolver;
 
 import javax.xml.namespace.QName;
@@ -38,6 +37,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
         System.out.println("Method = " + operation + "\n\n\n\n");
         try{
         	if(outbound){
+        		/*
             	final String plainText = getMessage(smc);
     	        final byte[] plainBytes = plainText.getBytes();
 
@@ -52,7 +52,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     	        //System.out.println("MAC is " + (result ? "right" : "wrong"));
 
     	        addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));    		
-
+        		 */
         	}
         	else{
         		System.out.println(getMessage(smc));
@@ -88,13 +88,12 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     	        SOAPMessage msg = smc.getMessage();
     	        SOAPPart sp = msg.getSOAPPart();
     	        SOAPEnvelope se = sp.getEnvelope();
+    	        byte[] publicKeyClient = getBodyElement(smc, "key").getBytes();
     	        
-    	        byte[] publicKeyClient = se.getBody().getFirstChild().getFirstChild().getFirstChild().getFirstChild().getNodeValue().getBytes();
     	        System.out.println("=======================\n\n\n\n\n");
-
+    	        
     	        // make MAC
     	        byte[] cipherDigest = parseHexBinary(mac);
-    	        System.out.println(getHeaderElement(smc, "key", "key"));
     	        // verify the MAC
     	        boolean result = security.verifySignature(cipherDigest, plainBytes, publicKeyClient);
     	        System.out.println("MAC is " + (result ? "right" : "wrong"));
@@ -106,6 +105,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
         catch(Exception e){
             System.out.print("Caught exception in handleMessage: ");
             System.out.println(e);
+            e.printStackTrace();
             System.out.println("Continue normal processing...");
         }
 		System.out.println(getMessage(smc));
@@ -227,6 +227,41 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     }
     
 
-
+    
+    /**
+     * metodo para obter um elemento com um dado nome 'Header', um dado
+     * namespace 'headerNS' ao cabecalho de uma SOAPMessage 'smc'
+     */
+    private String getBodyElement(SOAPMessageContext smc, String tag){
+        try{
+	    	// get SOAP envelope header
+	        SOAPMessage msg = smc.getMessage();
+	        SOAPPart sp = msg.getSOAPPart();
+	        SOAPEnvelope se = sp.getEnvelope();
+	        SOAPBody sh = se.getBody();
+	        return findAttributeRecursive(sh, tag);
+	    }
+        catch(Exception e){
+        	System.out.println("Erro getHeaderElement");
+        }
+    	return null;
+    }
+    
+    private String findAttributeRecursive(SOAPElement element, String tag){    	
+    	NodeList nl = element.getChildNodes();
+    	for(int i=0; i<nl.getLength() ; i++){
+    		if(nl.item(i).getNodeType() == Node.ELEMENT_NODE){
+    			SOAPElement se = (SOAPElement) nl.item(i);
+    			System.out.println(se.getNodeName());
+    			if(se.getNodeName().equals(tag))
+    				return se.getValue();
+    			String atr = findAttributeRecursive(se, tag);
+    			if(atr != null)
+    				return atr;
+    		}
+    	}
+    	return null;
+    }
+    
 
 }

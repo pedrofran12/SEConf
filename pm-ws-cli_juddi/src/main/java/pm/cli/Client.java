@@ -23,6 +23,7 @@ import pt.ulisboa.tecnico.seconf.ws.uddi.UDDINaming;
 
 
 import pm.ws.*;// classes generated from WSDL
+import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 public class Client {
 
@@ -79,7 +80,7 @@ public class Client {
 		c.init(ks, alias, password);
 		c.register_user();
 		c.save_password("fuckybook.com".getBytes(), "pedro".getBytes(), "chupa".getBytes());
-
+		System.out.println(printHexBinary(("fuckybook.com".getBytes())));
 		System.out.println(new String(c.retrieve_password("fuckybook.com".getBytes(), "pedro".getBytes())));
 		c.doCode();
 	}

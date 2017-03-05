@@ -2,6 +2,7 @@ package pm.handler;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,8 +10,10 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.security.Key;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -20,6 +23,8 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
 import javax.crypto.KeyGenerator;
@@ -43,18 +48,16 @@ public class HandlerSecurity {
 	
 	public HandlerSecurity() throws IOException, NoSuchAlgorithmException{
 		try{
-	        FileInputStream fis = new FileInputStream(keyPath + "/private.key");
-	        byte[] encoded = new byte[fis.available()];
-	        fis.read(encoded);
-	        fis.close();
-	        _privateKey = (PrivateKey) new SecretKeySpec(encoded, "RSA");
-	        
-	        
-	        fis = new FileInputStream(keyPath + "/public.key");
-	        encoded = new byte[fis.available()];
-	        fis.read(encoded);
-	        fis.close();
-	        _publicKey = (PublicKey) new SecretKeySpec(encoded, "RSA");
+	        System.out.println("Reading key from file " + keyPath + " ...");
+	        byte[] keyBytesPublic = Files.readAllBytes(new File(keyPath + "/ServerPublic.key").toPath());
+	        X509EncodedKeySpec specPublic = new X509EncodedKeySpec(keyBytesPublic);
+	        KeyFactory kf = KeyFactory.getInstance("RSA");
+	        _publicKey = kf.generatePublic(specPublic);
+			
+	        System.out.println("Reading key from file " + keyPath + " ...");
+	        byte[] keyBytesPrivate = Files.readAllBytes(new File(keyPath + "/ServerPrivate.key").toPath());
+	        PKCS8EncodedKeySpec specPrivate = new PKCS8EncodedKeySpec(keyBytesPrivate);
+	        _privateKey = kf.generatePrivate(specPrivate);
 		}
 		catch(Exception e){
 			System.out.println("Generating RSA key ..." );
@@ -73,11 +76,11 @@ public class HandlerSecurity {
 	        System.out.println(printHexBinary(pubKeyEncoded));       
 
 	        System.out.println("Writing Private key to '" + keyPath + "' ..." );
-	        FileOutputStream privFos = new FileOutputStream(keyPath + "/private.key");
+	        FileOutputStream privFos = new FileOutputStream(keyPath + "/ServerPrivate.key");
 	        privFos.write(privKeyEncoded);
 	        privFos.close();
 	        System.out.println("Writing Pubic key to '" + keyPath + "' ..." );
-	        FileOutputStream pubFos = new FileOutputStream(keyPath + "/public.key");
+	        FileOutputStream pubFos = new FileOutputStream(keyPath + "/ServerPublic.key");
 	        pubFos.write(pubKeyEncoded);
 	        pubFos.close();        
 		}
@@ -138,9 +141,18 @@ public class HandlerSecurity {
 			ObjectInput in = new ObjectInputStream(bis);
 			in.close();
 			bis.close();
-			return (java.security.Key) in.readObject();
+			pm.ws.Key key = (pm.ws.Key) in.readObject();
+			
+			ByteArrayInputStream bis2 = new ByteArrayInputStream(key.getKey());
+			ObjectInput in2 = new ObjectInputStream(bis2);
+			in2.close();
+			bis2.close();
+			return (java.security.Key)in2.readObject();
+			//return (java.security.Key) in.readObject();
+			
 		}
 		catch(Exception e){
+			e.printStackTrace();
 			throw new InvalidKeyException();
 		}
 	}
