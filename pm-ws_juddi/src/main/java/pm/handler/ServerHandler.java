@@ -3,7 +3,9 @@ package pm.handler;
 import java.io.ByteArrayOutputStream;
 import java.security.Key;
 import java.security.PrivateKey;
+import java.sql.Timestamp;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -20,252 +22,297 @@ import org.w3c.dom.NodeList;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
-
 public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
-	
+
     public static final String HEADER_KEY = "key";
     public static final String HEADER_KEY_NS = "urn:key";
-    
+
     public static final String HEADER_MAC = "mac";
     public static final String HEADER_MAC_NS = "urn:mac";
-	
+    
+    public static final String HEADER_NONCE = "nonce";
+    public static final String HEADER_NONCE_NS = "urn:nonce";
+    
+    public static final String HEADER_TIMESTAMP = "timestamp";
+    public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
 
-	@Override
-	public boolean handleMessage(SOAPMessageContext smc) {
+
+    private HashMap<Integer, Long> nonceMap = new HashMap<Integer, Long>();
+
+    @Override
+    public boolean handleMessage(SOAPMessageContext smc) {
         Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
         String operation = smc.get(MessageContext.WSDL_OPERATION).toString();
         System.out.println("Outbound = " + outbound + "\n\n\n\n");
         System.out.println("Method = " + operation + "\n\n\n\n");
-        try{
-        	if(outbound){
-        
-            	final String plainText = getMessage(smc);
-    	        final byte[] plainBytes = plainText.getBytes();
+        try {
+            if (outbound) {
 
-    	        //SEGURANCA : MAC
-    	        HandlerSecurity security = new HandlerSecurity();
-    	        System.out.println("=======================\n\n\n\n\n");
-    	        // make MAC
-    	        byte[] cipherDigest = security.makeSignature(plainBytes);
+                final String plainText = getMessage(smc);
+                final byte[] plainBytes = plainText.getBytes();
 
-    	        // verify the MAC
-    	        //boolean result = security.verifyMAC(cipherDigest, plainBytes, key);
-    	        //System.out.println("MAC is " + (result ? "right" : "wrong"));
+                // SEGURANCA : MAC
+                HandlerSecurity security = new HandlerSecurity();
+                System.out.println("=======================\n\n\n\n\n");
+                // make MAC
+                byte[] cipherDigest = security.makeSignature(plainBytes);
 
-    	        addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));    		
-        		
-        	}
-        	else{
-        		
-        		System.out.println(getMessage(smc));
+                // verify the MAC
+                // boolean result = security.verifyMAC(cipherDigest, plainBytes,
+                // key);
+                // System.out.println("MAC is " + (result ? "right" : "wrong"));
 
-        		//message that is going to be sent from client to server
+                addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));
+            } else {
 
-        		//obter mac value
-    			String mac = getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS);
+                System.out.println(getMessage(smc));
 
-    			// SOAP Message nao tem mac
-    			if(mac==null)
-    				return false;
-    			
-    			//Remover da Header a componentes MAC
-    			SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
-    			NodeList nl =  header.getChildNodes();
-    			for(int i=0; i<nl.getLength(); i++){
-    				if(nl.item(i).getNodeName().equals("d:"+HEADER_MAC))
-    					header.removeChild(nl.item(i));
-    			}
-    			header.normalize();
+                // message that is going to be sent from client to server
 
-    			// SOAP Message em string sem o elemento MAC da Header
-    			final String plainText = getMessage(smc);
-    	        final byte[] plainBytes = plainText.getBytes();
+                // obter mac value
+                String mac = getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS);
 
+                // SOAP Message nao tem mac
+                if (mac == null)
+                    return false;
 
-    	        //SEGURANCA : MAC
-    	        HandlerSecurity security = new HandlerSecurity();
-    	        System.out.println("=======================\n\n\n\n\n");
+                // Remover da Header a componentes MAC
+                SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
+                NodeList nl = header.getChildNodes();
+                for (int i = 0; i < nl.getLength(); i++) {
+                    if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC))
+                        header.removeChild(nl.item(i));
+                }
+                header.normalize();
 
-    	        // Key do cliente
-    	        SOAPMessage msg = smc.getMessage();
-    	        SOAPPart sp = msg.getSOAPPart();
-    	        SOAPEnvelope se = sp.getEnvelope();
-    	        byte[] byteElement = getBodyElement(smc, "key").getBytes();
-    	        byte[] publicKeyClient = Base64.getDecoder().decode(byteElement);
-    	        
-    	        System.out.println("=======================\n\n\n\n\n");
-    	        
-    	        // make MAC
-    	        byte[] cipherDigest = parseHexBinary(mac);
-    	        // verify the MAC
-    	        boolean result = security.verifySignature(cipherDigest, plainBytes, publicKeyClient);
-    	        System.out.println("MAC is " + (result ? "right" : "wrong"));
+                // SOAP Message em string sem o elemento MAC da Header
+                final String plainText = getMessage(smc);
+                final byte[] plainBytes = plainText.getBytes();
 
-    	        if(!result)
-    	        	return false;
-    	        	
-        	}
-        }
-        catch(Exception e){
+                // SEGURANCA : MAC
+                HandlerSecurity security = new HandlerSecurity();
+                System.out.println("=======================\n\n\n\n\n");
+
+                // Key do cliente
+                SOAPMessage msg = smc.getMessage();
+                SOAPPart sp = msg.getSOAPPart();
+                SOAPEnvelope se = sp.getEnvelope();
+                byte[] byteElement = getBodyElement(smc, "key").getBytes();
+                byte[] publicKeyClient = Base64.getDecoder().decode(byteElement);
+
+                System.out.println("=======================\n\n\n\n\n");
+
+                // make MAC
+                byte[] cipherDigest = parseHexBinary(mac);
+                // verify the MAC
+                boolean result = security.verifySignature(cipherDigest, plainBytes, publicKeyClient);
+                System.out.println("MAC is " + (result ? "right" : "wrong"));
+                
+                
+                
+                System.out.println("\n\nFOUND TS?\n\n" );
+                //CHECK nonce + ts 
+                int nonce = Integer.parseInt(getHeaderElement(smc, HEADER_NONCE ,HEADER_NONCE_NS)); //need to check with send 
+                long ts = Long.parseLong(getHeaderElement(smc,HEADER_TIMESTAMP,HEADER_TIMESTAMP_NS));
+                System.out.println("FOUND TS = "+ts);
+                System.out.println("\n\nFOUND NONCE?\n\n" );
+                System.out.println("FOUND NONCE = "+nonce);
+                if(!isNonceValid(nonce,ts)) //if nonce not valid returns false! (discards message)
+                    return false;   
+
+                if (!result)
+                    return false;
+
+            }
+        } catch (Exception e) {
             System.out.print("Caught exception in handleMessage: ");
             System.out.println(e);
             e.printStackTrace();
             System.out.println("Continue normal processing...");
         }
-		System.out.println(getMessage(smc));
-		
-		return true;
-	}
+        System.out.println(getMessage(smc));
 
-	@Override
-	public boolean handleFault(SOAPMessageContext smc) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+        return true;
+    }
 
-	@Override
-	public void close(MessageContext context) {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public boolean handleFault(SOAPMessageContext smc) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
-	@Override
-	public Set getHeaders() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public void close(MessageContext context) {
+        // TODO Auto-generated method stub
 
-	
-	
+    }
+
+    @Override
+    public Set getHeaders() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     /**
-     * Check the MESSAGE_OUTBOUND_PROPERTY in the context
-     * to see if this is an outgoing or incoming message.
-     * Write a brief message to the print stream and
-     * output the message. The writeTo() method can throw
-     * SOAPException or IOException
+     * Check the MESSAGE_OUTBOUND_PROPERTY in the context to see if this is an
+     * outgoing or incoming message. Write a brief message to the print stream
+     * and output the message. The writeTo() method can throw SOAPException or
+     * IOException
      */
     private String getMessage(SOAPMessageContext smc) {
         SOAPMessage message = smc.getMessage();
         try {
-        	ByteArrayOutputStream out = new ByteArrayOutputStream(0);
-        	message.writeTo(out);
-        	return new String(out.toByteArray());
-            
+            ByteArrayOutputStream out = new ByteArrayOutputStream(0);
+            message.writeTo(out);
+            return new String(out.toByteArray());
+
         } catch (Exception e) {
             System.out.printf("Exception in handler: %s%n", e);
         }
         return null;
     }
-    
-    
-    /**
-     * metodo para adicionar elemento 'a Header da SOAP Message 'smc'
-     * com um dado nome 'header', um dado namespace 'headNS'
-     * e o valor desta componente 'value'
-     */
-    private void addHeaderSM(SOAPMessageContext smc, String header, String headerNS, String value){
-    	try {
-	    	// get SOAP envelope
-	        SOAPMessage msg = smc.getMessage();
-	        SOAPPart sp = msg.getSOAPPart();
-	        SOAPEnvelope se = sp.getEnvelope();
-	
-	        // add header
-	        SOAPHeader sh = se.getHeader();
-	        if (sh == null)
-	            sh = se.addHeader();
-	
-	        // add header element (name, namespace prefix, namespace)
-	        Name name = se.createName(header, "d", headerNS);
-	        SOAPHeaderElement element = sh.addHeaderElement(name);
-	
-	        // add header element value
-	        element.addTextNode(value);
-	        
-		} catch (SOAPException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    }
-    
-    
-    
-    /**
-     * metodo para obter um elemento com um dado nome 'Header', um dado
-     * namespace 'headerNS' ao cabecalho de uma SOAPMessage 'smc'
-     */
-    private String getHeaderElement(SOAPMessageContext smc, String header, String headerNS){
-        try{
-	    	// get SOAP envelope header
-	        SOAPMessage msg = smc.getMessage();
-	        SOAPPart sp = msg.getSOAPPart();
-	        SOAPEnvelope se = sp.getEnvelope();
-	        SOAPHeader sh = se.getHeader();
-	
-	        // check header
-	        if (sh == null) {
-	            System.out.println("Header not found.");
-	            return null;
-	        }
-	
-	        // get first header element
-	        Name name = se.createName(header, "d", headerNS);
-	        Iterator it = sh.getChildElements(name);
-	        // check header element
-	        if (!it.hasNext()) {
-	            System.out.println("Header element not found.");
-	            return null;
-	        }
-	        SOAPElement element = (SOAPElement) it.next();
-	        // get header element value
-	        String value = element.getValue();
-	        
-	        // print received header
-	        System.out.println("Header value is " + value);
-	        return value;
-        }
-        catch(Exception e){
-        	System.out.println("Erro getHeaderElement");
-        }
-    	return null;
-    }
-    
 
-    
+    /**
+     * metodo para adicionar elemento 'a Header da SOAP Message 'smc' com um
+     * dado nome 'header', um dado namespace 'headNS' e o valor desta componente
+     * 'value'
+     */
+    private void addHeaderSM(SOAPMessageContext smc, String header, String headerNS, String value) {
+        try {
+            // get SOAP envelope
+            SOAPMessage msg = smc.getMessage();
+            SOAPPart sp = msg.getSOAPPart();
+            SOAPEnvelope se = sp.getEnvelope();
+
+            // add header
+            SOAPHeader sh = se.getHeader();
+            if (sh == null)
+                sh = se.addHeader();
+
+            // add header element (name, namespace prefix, namespace)
+            Name name = se.createName(header, "d", headerNS);
+            SOAPHeaderElement element = sh.addHeaderElement(name);
+
+            // add header element value
+            element.addTextNode(value);
+
+        } catch (SOAPException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
     /**
      * metodo para obter um elemento com um dado nome 'Header', um dado
      * namespace 'headerNS' ao cabecalho de uma SOAPMessage 'smc'
      */
-    private String getBodyElement(SOAPMessageContext smc, String tag){
-        try{
-	    	// get SOAP envelope header
-	        SOAPMessage msg = smc.getMessage();
-	        SOAPPart sp = msg.getSOAPPart();
-	        SOAPEnvelope se = sp.getEnvelope();
-	        SOAPBody sh = se.getBody();
-	        return findAttributeRecursive(sh, tag);
-	    }
-        catch(Exception e){
-        	System.out.println("Erro getHeaderElement");
+    private String getHeaderElement(SOAPMessageContext smc, String header, String headerNS) {
+        try {
+            // get SOAP envelope header
+            SOAPMessage msg = smc.getMessage();
+            SOAPPart sp = msg.getSOAPPart();
+            SOAPEnvelope se = sp.getEnvelope();
+            SOAPHeader sh = se.getHeader();
+
+            // check header
+            if (sh == null) {
+                System.out.println("Header not found.");
+                return null;
+            }
+
+            // get first header element
+            Name name = se.createName(header, "d", headerNS);
+            Iterator it = sh.getChildElements(name);
+            // check header element
+            if (!it.hasNext()) {
+                System.out.println("Header element not found.");
+                return null;
+            }
+            SOAPElement element = (SOAPElement) it.next();
+            // get header element value
+            String value = element.getValue();
+
+            // print received header
+            System.out.println("Header value is " + value);
+            return value;
+        } catch (Exception e) {
+            System.out.println("Erro getHeaderElement");
         }
-    	return null;
+        return null;
+    }
+
+    /**
+     * metodo para obter um elemento com um dado nome 'Header', um dado
+     * namespace 'headerNS' ao cabecalho de uma SOAPMessage 'smc'
+     */
+    private String getBodyElement(SOAPMessageContext smc, String tag) {
+        try {
+            // get SOAP envelope header
+            SOAPMessage msg = smc.getMessage();
+            SOAPPart sp = msg.getSOAPPart();
+            SOAPEnvelope se = sp.getEnvelope();
+            SOAPBody sh = se.getBody();
+            return findAttributeRecursive(sh, tag);
+        } catch (Exception e) {
+            System.out.println("Erro getHeaderElement");
+        }
+        return null;
+    }
+
+    private String findAttributeRecursive(SOAPElement element, String tag) {
+        NodeList nl = element.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            if (nl.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                SOAPElement se = (SOAPElement) nl.item(i);
+                System.out.println(se.getNodeName());
+                if (se.getNodeName().equals(tag))
+                    return se.getValue();
+                String atr = findAttributeRecursive(se, tag);
+                if (atr != null)
+                    return atr;
+            }
+        }
+        return null;
+    }
+
+    // Nonce + Timestamp
+    /*
+     * Checks for nonce in map
+     * TRUE: 
+     *     - Checks for Timestamp of that nonce in map and received_nonce:
+     *     True:
+     *          - Within 2min: REPLAY ATTACK
+     *     FALSE:
+     *          - Outdated nonce, i'll update it!
+     * False:
+     *       -Nonce does not exists, so it's a new... i'll add it!
+     */
+    private boolean isNonceValid(int nonce, long nTs)/*throws NonceRepeatedException*/ {
+
+        if (nonceMap.containsKey(nonce)) {
+            long ts = nonceMap.get(nonce);
+            if (compareTime(nTs, ts, 2)) // within 2 minutes then it's valid
+                return false;             // throw new NonceRepeatedException;
+    
+            nonceMap.put(nonce, ts);
+            return true;
+            
+
+        } else {// nonce not found! First message:
+            nonceMap.put(nonce, nTs);
+            return true;
+        }
     }
     
-    private String findAttributeRecursive(SOAPElement element, String tag){    	
-    	NodeList nl = element.getChildNodes();
-    	for(int i=0; i<nl.getLength() ; i++){
-    		if(nl.item(i).getNodeType() == Node.ELEMENT_NODE){
-    			SOAPElement se = (SOAPElement) nl.item(i);
-    			System.out.println(se.getNodeName());
-    			if(se.getNodeName().equals(tag))
-    				return se.getValue();
-    			String atr = findAttributeRecursive(se, tag);
-    			if(atr != null)
-    				return atr;
-    		}
-    	}
-    	return null;
+    /*
+     * If ts is older than ts2 = ERROR
+     */
+    private boolean compareTime(long ts, long ts2, int minutes){
+        if (ts2 > ts)
+            return false; 
+        return (ts - ts2)<minutes*60*1000;
     }
+    
     
 
 }

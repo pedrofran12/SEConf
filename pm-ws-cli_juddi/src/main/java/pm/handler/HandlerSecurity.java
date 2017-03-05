@@ -22,6 +22,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.cert.Certificate;
 import java.security.spec.X509EncodedKeySpec;
@@ -36,6 +37,9 @@ import javax.xml.ws.handler.soap.SOAPMessageContext;
 import pm.ws.*;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
+
+//nonce
+import java.sql.Timestamp;
 
 
 public class HandlerSecurity {
@@ -88,13 +92,13 @@ public class HandlerSecurity {
 			_privateKeyClient = (PrivateKey) keystore.getKey(alias, password);
 			
 
+	        
 		}
 		catch(Exception e){
 			e.printStackTrace();;
 		}
 		
 	}
-	
 	
 	public PublicKey getPublicKey(){
 		return _publicKeyServer;

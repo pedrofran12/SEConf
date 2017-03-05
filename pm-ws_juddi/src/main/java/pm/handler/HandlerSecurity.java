@@ -26,6 +26,8 @@ import java.security.cert.Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
@@ -40,11 +42,15 @@ import pm.exception.InvalidMessageDigestException;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 
+//Timestamp
+import java.sql.Timestamp;
+
 public class HandlerSecurity {
 
 	private PrivateKey _privateKey;
 	private PublicKey _publicKey;
 	private String keyPath = ".";
+	
 	
 	
 	public HandlerSecurity() throws IOException, NoSuchAlgorithmException{
@@ -95,6 +101,13 @@ public class HandlerSecurity {
 	private PrivateKey getPrivateKey(){
 		return _privateKey;
 	}
+	
+	/*
+	 * Check if time is within limits?
+	 * If yes: Check if nonce already exists?
+	 *         if yes: discards message
+	 *         If Not: 
+	 */
 	
 	
     /** auxiliary method to make the MAC */
