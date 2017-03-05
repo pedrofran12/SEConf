@@ -47,7 +47,6 @@ public class HandlerSecurity {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			;
 		}
 
 	}
