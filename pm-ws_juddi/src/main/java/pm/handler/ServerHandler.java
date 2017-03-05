@@ -1,6 +1,8 @@
 package pm.handler;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Iterator;
 import java.util.Set;
@@ -16,14 +18,20 @@ import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
+	private HandlerSecurity _security;
+
 	public static final String HEADER_KEY = "key";
 	public static final String HEADER_KEY_NS = "urn:key";
 
 	public static final String HEADER_MAC = "mac";
 	public static final String HEADER_MAC_NS = "urn:mac";
 
-	public ServerHandler() {
-		System.out.println("===============\n\nCreated handler\n\n===================");
+	public ServerHandler() throws NoSuchAlgorithmException, IOException {
+		_security = new HandlerSecurity();
+	}
+
+	private HandlerSecurity getHandlerSecurity() {
+		return _security;
 	}
 
 	@Override
@@ -38,7 +46,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				final byte[] plainBytes = getMessage(smc).getBytes();
 
 				// SEGURANCA : MAC
-				HandlerSecurity security = new HandlerSecurity();
+				HandlerSecurity security = getHandlerSecurity();
 				System.out.println("=======================\n\n\n\n\n");
 
 				// make MAC
@@ -46,7 +54,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));
 
 			} else {
-				System.out.println(getMessage(smc));
+				System.out.println(getMessage(smc)); // <- remover isto faz com que esta merda falhe
 
 				// message that is going to be sent from client to server
 
@@ -62,8 +70,9 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
 				NodeList nl = header.getChildNodes();
 				for (int i = 0; i < nl.getLength(); i++) {
-					if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC))
+					if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
 						header.removeChild(nl.item(i));
+					}
 				}
 				header.normalize();
 
@@ -71,13 +80,11 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				final byte[] plainBytes = getMessage(smc).getBytes();
 
 				// SEGURANCA : MAC
-				HandlerSecurity security = new HandlerSecurity();
-				System.out.println("=======================\n\n\n\n\n");
+				HandlerSecurity security = getHandlerSecurity();
 
 				// Key do cliente
 				byte[] byteElement = getBodyElement(smc, "key").getBytes();
 				byte[] publicKeyClient = Base64.getDecoder().decode(byteElement);
-				System.out.println("=======================\n\n\n\n\n");
 
 				// make MAC
 				byte[] cipherDigest = parseHexBinary(mac);
@@ -202,7 +209,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 			// print received header
 			System.out.println("Header value is " + value);
 			return value;
-			
+
 		} catch (Exception e) {
 			System.out.println("Erro getHeaderElement");
 		}
@@ -233,11 +240,13 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 			if (nl.item(i).getNodeType() == Node.ELEMENT_NODE) {
 				SOAPElement se = (SOAPElement) nl.item(i);
 				System.out.println(se.getNodeName());
-				if (se.getNodeName().equals(tag))
+				if (se.getNodeName().equals(tag)) {
 					return se.getValue();
+				}
 				String atr = findAttributeRecursive(se, tag);
-				if (atr != null)
+				if (atr != null) {
 					return atr;
+				}
 			}
 		}
 		return null;

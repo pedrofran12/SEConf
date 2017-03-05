@@ -26,10 +26,12 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 public class HandlerSecurity {
 
-	private PrivateKey _privateKey;
-	private PublicKey _publicKey;
 	private static final String publicKeyPath = "./ServerPublic.key";
 	private static final String privateKeyPath = "./ServerPrivate.key";
+	private static final String MAC_SIGNATURE = "SHA256withRSA";
+
+	private PrivateKey _privateKey;
+	private PublicKey _publicKey;
 
 	public HandlerSecurity() throws IOException, NoSuchAlgorithmException {
 		try {
@@ -86,7 +88,8 @@ public class HandlerSecurity {
 	/** auxiliary method to make the MAC */
 	public byte[] makeSignature(byte[] bytes) throws Exception {
 		PrivateKey privateKey = getPrivateKey();
-		Signature cipher = Signature.getInstance("SHA256withRSA");
+
+		Signature cipher = Signature.getInstance(MAC_SIGNATURE);
 		cipher.initSign(privateKey);
 		cipher.update(bytes);
 
@@ -100,7 +103,7 @@ public class HandlerSecurity {
 	public boolean verifySignature(byte[] cipherDigest, byte[] bytes, byte[] key) throws Exception {
 		PublicKey k = ObjectUtil.readObjectBytes(key, PublicKey.class);
 
-		Signature cipher = Signature.getInstance("SHA256withRSA");
+		Signature cipher = Signature.getInstance(MAC_SIGNATURE);
 		cipher.initVerify(k);
 		cipher.update(bytes);
 
@@ -124,7 +127,6 @@ public class HandlerSecurity {
 
 	// - DIGEST - //
 	public static MessageDigest object2Hash(MessageDigest md, Object obj) throws NoSuchAlgorithmException, IOException {
-
 		if (md == null) {
 			md = MessageDigest.getInstance("SHA-256");
 		}
@@ -133,7 +135,6 @@ public class HandlerSecurity {
 	}
 
 	public static byte[] digestMessage(MessageDigest md) throws InvalidMessageDigestException {
-
 		if (md == null) {
 			throw new InvalidMessageDigestException(); // needs to be corrected
 		}

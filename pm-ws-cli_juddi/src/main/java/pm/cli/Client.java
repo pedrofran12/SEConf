@@ -1,30 +1,20 @@
 package pm.cli;
 
 import java.security.cert.Certificate;
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
 import java.security.Key;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.UnrecoverableKeyException;
 import java.util.*;
 
-import javax.jws.HandlerChain;
-import javax.xml.bind.DatatypeConverter;
 import javax.xml.ws.*;
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 
 import pt.ulisboa.tecnico.seconf.ws.uddi.UDDINaming;
-
-
+import utilities.ObjectUtil;
 import pm.ws.*;// classes generated from WSDL
-import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 public class Client {
 
@@ -75,9 +65,9 @@ public class Client {
 		KeyStore ks = KeyStore.getInstance("JKS");
 		InputStream readStream = new FileInputStream("src/main/resources/KeyStore.jks");
 		ks.load(readStream, password);
-		java.security.Key key = ks.getKey(alias, password);
 		readStream.close();
 		// ****************************
+		
 		c.init(ks, alias, password);
 		c.register_user();
 		c.save_password("fuckybook.com".getBytes(), "pedro".getBytes(), "chupa".getBytes());
@@ -117,7 +107,7 @@ public class Client {
 
   public byte[] retrieve_password(byte[] domain, byte[] username){
       byte[] password = null;
-
+      
       try{
           password = _pm.get(getPublicKey(), domain, username);
       }catch(Exception pme){
@@ -141,18 +131,10 @@ public class Client {
 
 			// Get public key
 			PublicKey publicKey = cert.getPublicKey();
-			
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			ObjectOutput out = new ObjectOutputStream(bos);
-			out.writeObject(publicKey);
-			out.flush();
-			out.close();
 			pm.ws.Key k = new pm.ws.Key();
-			k.setKey(bos.toByteArray());
-			bos.close();
+			k.setKey(ObjectUtil.writeObjectBytes(publicKey));
 			return k;
 		}
-
 		throw new Exception("key");
 	}
 
