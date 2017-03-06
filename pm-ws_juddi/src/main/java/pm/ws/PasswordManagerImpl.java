@@ -1,11 +1,5 @@
 package pm.ws;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +17,7 @@ import utilities.ObjectUtil;
 @HandlerChain(file = "/handler-chain.xml")
 public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private static final long serialVersionUID = 1L;
-	private static final String SAVE_STATE_NAME = "PasswordManager.serial";
+	private static final String SAVE_STATE_NAME = "./PasswordManager.serial";
 
 	private final Map<java.security.Key, TripletStore> password;
 	private final Lock saveStateLock;
@@ -39,7 +33,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 			throw new KeyAlreadyExistsException();
 		}
 		password.put(key, new TripletStore());
-    daemonSaveState();
+		daemonSaveState();
 	}
 
 	public void put(Key publicKey, byte[] domain, byte[] username, byte[] password) throws PasswordManagerException {
@@ -67,7 +61,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private java.security.Key keyToKey(Key k) throws InvalidKeyException {
 		return ObjectUtil.readObjectBytes(k.getKey(), java.security.Key.class);
 	}
-	
+
 	private void daemonSaveState() {
 		new Runnable() {
 			@Override
@@ -76,35 +70,26 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 			}
 		}.run();
 	}
-	
+
 	private void saveState() {
 		saveStateLock.lock();
-		try {
-			FileOutputStream fos = new FileOutputStream(SAVE_STATE_NAME);
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject(this);
-			oos.flush();
-			oos.close();
-			fos.close();
+		boolean saved = ObjectUtil.writeObjectFile(SAVE_STATE_NAME, this);
+		if (saved) {
 			System.out.println(">>> Saved state");
-		} catch (Exception e) {
+		} else {
 			System.out.println(">>> Failed to save state");
 		}
 		saveStateLock.unlock();
 	}
-	
+
 	public static PasswordManager getInstance() {
-		try {
-			FileInputStream fis = new FileInputStream(SAVE_STATE_NAME);
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			PasswordManager pm = (PasswordManagerImpl) ois.readObject();
-			ois.close();
-			fis.close();
+		PasswordManager pm = ObjectUtil.readObjectFile(SAVE_STATE_NAME, PasswordManagerImpl.class);
+		if (pm != null) {
 			System.out.println(">>> Loaded state");
-			return pm;
-		} catch (Exception e) {
+		} else {
 			System.out.println(">>> Created");
-			return new PasswordManagerImpl();
+			pm = new PasswordManagerImpl();
 		}
+		return pm;
 	}
 }

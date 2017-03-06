@@ -33,12 +33,14 @@ public abstract class ObjectUtil {
 	}
 
 	// GENERAL WRITE
-	public static <T> void writeObject(T obj, OutputStream out) {
+	public static <T> boolean writeObject(T obj, OutputStream out) {
+		boolean success = false;
 		ObjectOutput oo = null;
 		try {
 			oo = new ObjectOutputStream(out);
 			oo.writeObject(obj);
 			oo.flush();
+			success = true;
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -47,6 +49,7 @@ public abstract class ObjectUtil {
 			} catch (Exception e) {
 			}
 		}
+		return success;
 	}
 
 	// BYTE READ
@@ -103,11 +106,12 @@ public abstract class ObjectUtil {
 	}
 
 	// FILE WRITE
-	public static <T> void writeObjectFile(File file, T obj) {
+	public static <T> boolean writeObjectFile(File file, T obj) {
+		boolean success = false;
 		FileOutputStream fos = null;
 		try {
 			fos = new FileOutputStream(file);
-			writeObject(obj, fos);
+			success = writeObject(obj, fos);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -116,6 +120,7 @@ public abstract class ObjectUtil {
 			} catch (Exception e) {
 			}
 		}
+		return success;
 	}
 
 	// FILENAME READ
@@ -124,7 +129,7 @@ public abstract class ObjectUtil {
 	}
 
 	// FILENAME WRITE
-	public static <T> void writeObjectFile(String fileName, T obj) {
-		writeObjectFile(new File(fileName), obj);
+	public static <T> boolean writeObjectFile(String fileName, T obj) {
+		return writeObjectFile(new File(fileName), obj);
 	}
 }
