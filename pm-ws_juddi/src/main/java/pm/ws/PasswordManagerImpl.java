@@ -87,8 +87,8 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 		if (pm != null) {
 			System.out.println(">>> Loaded state");
 		} else {
-			System.out.println(">>> Created");
 			pm = new PasswordManagerImpl();
+			System.out.println(">>> Created");
 		}
 		return pm;
 	}
