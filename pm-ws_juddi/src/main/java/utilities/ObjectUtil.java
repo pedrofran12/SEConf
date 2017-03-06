@@ -74,8 +74,10 @@ public abstract class ObjectUtil {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		byte[] array = null;
 		try {
-			writeObject(obj, baos);
-			array = baos.toByteArray();
+			boolean success = writeObject(obj, baos);
+			if (success) {
+				array = baos.toByteArray();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
