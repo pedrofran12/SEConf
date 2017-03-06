@@ -1,6 +1,8 @@
 
 package pm.ws;
 
+import java.io.Serializable;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -31,8 +33,9 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "key", propOrder = {
     "key"
 })
-public class Key {
-/*
+public class Key implements Serializable {
+	private static final long serialVersionUID = 1L;
+	/*
     @XmlElement(required = true)
     protected String key;
     @XmlElement(required = true)
@@ -40,7 +43,7 @@ public class Key {
   */
 	@XmlElement(required = true)
 	protected byte[] key;
-
+	
     /**
      * Gets the value of the key property.
      * 
