@@ -29,6 +29,14 @@ import org.w3c.dom.NodeList;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
+//Nonce + Timestamp
+import java.net.InetAddress;
+import java.security.SecureRandom;
+import java.sql.Timestamp;
+
+import org.apache.commons.net.ntp.NTPUDPClient;
+import org.apache.commons.net.ntp.TimeInfo;
+
 @HandlerChain(file = "/handler-chain.xml")
 public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 
@@ -39,6 +47,12 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 
 	public static final String HEADER_MAC = "mac";
 	public static final String HEADER_MAC_NS = "urn:mac";
+
+	public static final String HEADER_NONCE = "nonce";
+    public static final String HEADER_NONCE_NS = "urn:nonce";
+    
+    public static final String HEADER_TIMESTAMP = "timestamp";
+    public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
 
 	public ClientHandler() throws NoSuchAlgorithmException, IOException {
 		_security = new HandlerSecurity();
@@ -75,6 +89,13 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 				// System.out.println("MAC is " + (result ? "right" : "wrong"));
 
 				addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));
+
+				// NONCE + Timestamp //
+                int nonce = generateNonce();
+                long ts = generateTimestamp();
+                addHeaderSM(smc,HEADER_NONCE,HEADER_NONCE_NS,""+nonce);
+                addHeaderSM(smc,HEADER_TIMESTAMP,HEADER_TIMESTAMP_NS,""+ts);
+        	
 				System.out.println(getMessage(smc));
 			} else {
 				// message that is going to be sent from client to server
@@ -232,4 +253,53 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 		}
 		return null;
 	}
+	
+    private int generateNonce() throws NoSuchAlgorithmException{
+        //generate new nonce
+        SecureRandom random = SecureRandom.getInstance("SHA1PRNG"); 
+        int nonce = random.nextInt(Integer.MAX_VALUE);
+        System.out.println("_nonce = "+nonce + "\n\n\n");
+        return nonce;
+    }
+
+    //return number of milliseconds since January 1, 1970, 00:00:00 GMT
+    private long generateTimestamp(){
+        String[] hosts = new String[]{"0.pt.pool.ntp.org","1.europe.pool.ntp.org","0.europe.pool.ntp.org","2.europe.pool.ntp.org"};
+        TimeInfo ti = null;
+        
+        NTPUDPClient timeClient = new NTPUDPClient();
+        timeClient.setDefaultTimeout(5000); //after 5 seconds no reply
+        
+        for(String host : hosts){
+            try{
+                InetAddress hostAddr = InetAddress.getByName(host);
+                System.out.println("> " + hostAddr.getHostName() + "/" + hostAddr.getHostAddress());
+                ti = timeClient.getTime(hostAddr);
+                System.out.println("\n\n\nTIME = "+ti.getReturnTime()+"\n\n\n");
+                //
+                Timestamp ts = new Timestamp(System.currentTimeMillis());
+                System.out.println("TimeStamp = " + ts.getTime() + "\n\n\n");
+                //
+                System.out.println("\n\n\nCOMPARING TIMES");
+                System.out.println("TI="+ti.getReturnTime());
+                System.out.println("TS="+ts.getTime());
+                break;
+                
+            }catch(Exception e){
+                //continue next host
+                e.printStackTrace();
+            }
+        }
+        timeClient.close();
+        if(ti!=null){
+            return ti.getReturnTime();
+        }
+        else{
+            //generate new ts
+            Timestamp ts = new Timestamp(System.currentTimeMillis());
+            System.out.println("TimeStamp = " + ts.getTime() + "\n\n\n");
+            return ts.getTime();
+        }
+    }
+    
 }

@@ -3,7 +3,9 @@ package pm.handler;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -18,13 +20,17 @@ import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
-	private HandlerSecurity _security;
+    public static final String HEADER_KEY = "key";
+    public static final String HEADER_KEY_NS = "urn:key";
 
-	public static final String HEADER_KEY = "key";
-	public static final String HEADER_KEY_NS = "urn:key";
-
-	public static final String HEADER_MAC = "mac";
-	public static final String HEADER_MAC_NS = "urn:mac";
+    public static final String HEADER_MAC = "mac";
+    public static final String HEADER_MAC_NS = "urn:mac";
+    
+    public static final String HEADER_NONCE = "nonce";
+    public static final String HEADER_NONCE_NS = "urn:nonce";
+    
+    public static final String HEADER_TIMESTAMP = "timestamp";
+    public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
 
 	public ServerHandler() throws NoSuchAlgorithmException, IOException {
 		_security = new HandlerSecurity();
@@ -91,6 +97,11 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				// verify the MAC
 				boolean result = security.verifySignature(cipherDigest, plainBytes, publicKeyClient);
 				System.out.println("MAC is " + (result ? "right" : "wrong"));
+
+				int nonce = Integer.parseInt(getHeaderElement(smc, HEADER_NONCE ,HEADER_NONCE_NS)); //need to check with send 
+                long ts = Long.parseLong(getHeaderElement(smc,HEADER_TIMESTAMP,HEADER_TIMESTAMP_NS));
+                if(!isNonceValid(nonce,ts)) //if nonce not valid returns false! (discards message)
+                    return false;   
 
 				if (!result) {
 					return false;
@@ -251,5 +262,42 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 		}
 		return null;
 	}
+
+	 /*
+     * Checks for nonce in map
+     * TRUE: 
+     *     - Checks for Timestamp of that nonce in map and received_nonce:
+     *     True:
+     *          - Within 2min: REPLAY ATTACK
+     *     FALSE:
+     *          - Outdated nonce, i'll update it!
+     * False:
+     *       -Nonce does not exists, so it's a new... i'll add it!
+     */
+    private boolean isNonceValid(int nonce, long nTs)/*throws NonceRepeatedException*/ {
+
+        if (nonceMap.containsKey(nonce)) {
+            long ts = nonceMap.get(nonce);
+            if (compareTime(nTs, ts, 2)) // within 2 minutes then it's valid
+                return false;             // throw new NonceRepeatedException;
+    
+            nonceMap.put(nonce, ts);
+            return true;
+            
+
+        } else {// nonce not found! First message:
+            nonceMap.put(nonce, nTs);
+            return true;
+        }
+    }
+    
+    /*
+     * If ts is older than ts2 = ERROR
+     */
+    private boolean compareTime(long ts, long ts2, int minutes){
+        if (ts2 > ts)
+            return false; 
+        return (ts - ts2)<minutes*60*1000;
+    }
 
 }
