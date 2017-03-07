@@ -289,14 +289,15 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
      */
     private boolean isNonceValid(int nonce, long nTs)/*throws NonceRepeatedException*/ {
         
-        checkNonces();
         long time = generateTimestamp();
-        if (nonceMap.containsKey(nonce)) {
+        checkNonces(time);
+        if(compareTime(time,nTs,NONCE_TIMEOUT)){// nonce not found! First message:
             return false;
-    
-        } else if(compareTime(time,nTs,NONCE_TIMEOUT)){// nonce not found! First message:
+        } 
+        else if (nonceMap.containsKey(nonce)) {
             return false;
-        }else{
+        }
+        else{
             nonceMap.put(nonce, nTs);
             return true;
         }
@@ -311,8 +312,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
         return (ts - ts2)<minutes*60*1000;
     }
     
-    private void checkNonces(){
-        long timeGenerated = generateTimestamp();
+    private void checkNonces(long timeGenerated){
         for(int j : nonceMap.keySet()){
             if(!compareTime(timeGenerated,nonceMap.get(j),NONCE_TIMEOUT))
                 nonceMap.remove(j);
