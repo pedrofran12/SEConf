@@ -290,16 +290,13 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     private boolean isNonceValid(int nonce, long nTs)/*throws NonceRepeatedException*/ {
         
         checkNonces();
+        long time = generateTimestamp();
         if (nonceMap.containsKey(nonce)) {
-            long ts = nonceMap.get(nonce);
-            if (compareTime(nTs, ts, NONCE_TIMEOUT)) // within nonce_timeout minutes then it's valid
-                return false;             // throw new NonceRepeatedException;
+            return false;
     
-            nonceMap.put(nonce, ts);
-            return true;
-            
-
-        } else {// nonce not found! First message:
+        } else if(compareTime(time,nTs,NONCE_TIMEOUT)){// nonce not found! First message:
+            return false;
+        }else{
             nonceMap.put(nonce, nTs);
             return true;
         }
