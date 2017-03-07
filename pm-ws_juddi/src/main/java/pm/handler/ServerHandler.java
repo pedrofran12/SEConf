@@ -19,6 +19,8 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
+    
+    private HandlerSecurity _security;
 
     public static final String HEADER_KEY = "key";
     public static final String HEADER_KEY_NS = "urn:key";
@@ -31,6 +33,8 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     
     public static final String HEADER_TIMESTAMP = "timestamp";
     public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
+    
+    private HashMap<Integer, Long> nonceMap = new HashMap<Integer, Long>();
 
 	public ServerHandler() throws NoSuchAlgorithmException, IOException {
 		_security = new HandlerSecurity();
@@ -102,6 +106,10 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
                 long ts = Long.parseLong(getHeaderElement(smc,HEADER_TIMESTAMP,HEADER_TIMESTAMP_NS));
                 if(!isNonceValid(nonce,ts)) //if nonce not valid returns false! (discards message)
                     return false;   
+                
+                System.out.println("FOUND TS = "+ts);
+                System.out.println("\n\nFOUND NONCE?\n\n" );
+                System.out.println("FOUND NONCE = "+nonce);
 
 				if (!result) {
 					return false;
