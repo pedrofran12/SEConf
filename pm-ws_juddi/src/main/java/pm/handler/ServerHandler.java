@@ -64,7 +64,8 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));
 
 			} else {
-				System.out.println(getMessage(smc)); // <- remover isto faz com que esta merda falhe
+			    getMessage(smc);
+				//System.out.println(getMessage(smc)); // <- remover isto faz com que esta merda falhe
 
 				// message that is going to be sent from client to server
 
@@ -104,12 +105,11 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
 				int nonce = Integer.parseInt(getHeaderElement(smc, HEADER_NONCE ,HEADER_NONCE_NS)); //need to check with send 
                 long ts = Long.parseLong(getHeaderElement(smc,HEADER_TIMESTAMP,HEADER_TIMESTAMP_NS));
-                if(!isNonceValid(nonce,ts)) //if nonce not valid returns false! (discards message)
-                    return false;   
+                System.out.println("\nNonce = "+nonce+"\n");
+                System.out.println("\nTimestamp = "+ts+"\n");
                 
-                System.out.println("FOUND TS = "+ts);
-                System.out.println("\n\nFOUND NONCE?\n\n" );
-                System.out.println("FOUND NONCE = "+nonce);
+                if(!isNonceValid(nonce,ts)) //if nonce not valid returns false! (discards message)
+                    return false;
 
 				if (!result) {
 					return false;
