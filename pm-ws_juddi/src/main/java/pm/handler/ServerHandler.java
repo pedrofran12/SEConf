@@ -2,6 +2,7 @@ package pm.handler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.Base64;
@@ -13,6 +14,8 @@ import javax.xml.soap.*;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.handler.soap.*;
 
+import org.apache.commons.net.ntp.NTPUDPClient;
+import org.apache.commons.net.ntp.TimeInfo;
 import org.w3c.dom.NodeList;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
@@ -33,6 +36,8 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     
     public static final String HEADER_TIMESTAMP = "timestamp";
     public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
+    
+    private static final int NONCE_TIMEOUT = 2; //in minutes
     
     private HashMap<Integer, Long> nonceMap = new HashMap<Integer, Long>();
 
@@ -283,10 +288,11 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
      *       -Nonce does not exists, so it's a new... i'll add it!
      */
     private boolean isNonceValid(int nonce, long nTs)/*throws NonceRepeatedException*/ {
-
+        
+        checkNonces();
         if (nonceMap.containsKey(nonce)) {
             long ts = nonceMap.get(nonce);
-            if (compareTime(nTs, ts, 2)) // within 2 minutes then it's valid
+            if (compareTime(nTs, ts, NONCE_TIMEOUT)) // within nonce_timeout minutes then it's valid
                 return false;             // throw new NonceRepeatedException;
     
             nonceMap.put(nonce, ts);
@@ -306,6 +312,45 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
         if (ts2 > ts)
             return false; 
         return (ts - ts2)<minutes*60*1000;
+    }
+    
+    private void checkNonces(){
+        long timeGenerated = generateTimestamp();
+        for(int j : nonceMap.keySet()){
+            if(!compareTime(timeGenerated,nonceMap.get(j),NONCE_TIMEOUT))
+                nonceMap.remove(j);
+        }
+    }
+    
+    private long generateTimestamp(){
+        String[] hosts = new String[]{"0.pt.pool.ntp.org","1.europe.pool.ntp.org","0.europe.pool.ntp.org","2.europe.pool.ntp.org"};
+        TimeInfo ti = null;
+        
+        NTPUDPClient timeClient = new NTPUDPClient();
+        timeClient.setDefaultTimeout(5000); //after 5 seconds no reply
+        
+        for(String host : hosts){
+            try{
+                InetAddress hostAddr = InetAddress.getByName(host);
+                System.out.println("\nConnected to>" + hostAddr.getHostName() + "/" + hostAddr.getHostAddress()+"\n");
+                ti = timeClient.getTime(hostAddr);
+                break;
+                
+            }catch(Exception e){
+                ti = null;
+                //continue next host
+                //e.printStackTrace();
+            }
+        }
+        timeClient.close();
+        if(ti!=null){
+            return ti.getReturnTime();
+        }
+        else{
+            //generate new ts
+            Timestamp ts = new Timestamp(System.currentTimeMillis());
+            return ts.getTime();
+        }
     }
 
 }
