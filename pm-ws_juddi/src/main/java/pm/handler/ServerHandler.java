@@ -25,11 +25,8 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     
     private HandlerSecurity _security;
 
-    public static final String HEADER_KEY = "key";
-    public static final String HEADER_KEY_NS = "urn:key";
-
-    public static final String HEADER_MAC = "mac";
-    public static final String HEADER_MAC_NS = "urn:mac";
+    public static final String HEADER_DSIGN = "dsign";
+    public static final String HEADER_DSIGN_NS = "urn:dsign";
     
     public static final String HEADER_NONCE = "nonce";
     public static final String HEADER_NONCE_NS = "urn:nonce";
@@ -53,8 +50,8 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 	public boolean handleMessage(SOAPMessageContext smc) {
 		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
 		String operation = smc.get(MessageContext.WSDL_OPERATION).toString();
-		System.out.println("Outbound = " + outbound + "\n\n\n\n");
-		System.out.println("Method = " + operation + "\n\n\n\n");
+		System.out.println("\nOutbound = " + outbound);
+		System.out.println("Method = " + operation);
 
 		try {
 			if (outbound) {
@@ -62,63 +59,59 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
 				// SEGURANCA : MAC
 				HandlerSecurity security = getHandlerSecurity();
-				System.out.println("=======================\n\n\n\n\n");
 
 				// make MAC
 				byte[] cipherDigest = security.makeSignature(plainBytes);
-				addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));
+				addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(cipherDigest));
 
-			} else {
-			    getMessage(smc);
-				//System.out.println(getMessage(smc)); // <- remover isto faz com que esta merda falhe
+			} else { // message that is going to be sent from client to server
+			    getMessage(smc); //required to program to work
+			   	
+				//Get MAC value
+				String mac = getHeaderElement(smc, HEADER_DSIGN, HEADER_DSIGN_NS);
 
-				// message that is going to be sent from client to server
-
-				// obter mac value
-				String mac = getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS);
-
-				// SOAP Message nao tem mac
+				//SOAP Message does not have MAC
 				if (mac == null) {
 					return false;
 				}
 
-				// Remover da Header a componentes MAC
+				//Remove MAC from header
 				SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
 				NodeList nl = header.getChildNodes();
 				for (int i = 0; i < nl.getLength(); i++) {
-					if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
+					if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN)) {
 						header.removeChild(nl.item(i));
 					}
 				}
 				header.normalize();
 
-				// SOAP Message em string sem o elemento MAC da Header
+				//SOAP Message bytes without MAC
 				final byte[] plainBytes = getMessage(smc).getBytes();
 
-				// SEGURANCA : MAC
+				//SEGURANCA : MAC
 				HandlerSecurity security = getHandlerSecurity();
 
-				// Key do cliente
+				//Client's Key
 				byte[] byteElement = getBodyElement(smc, "key").getBytes();
 				byte[] publicKeyClient = Base64.getDecoder().decode(byteElement);
 
-				// make MAC
+				//Generate's MAC
 				byte[] cipherDigest = parseHexBinary(mac);
-				// verify the MAC
+				//Verify MAC
 				boolean result = security.verifySignature(cipherDigest, plainBytes, publicKeyClient);
-				System.out.println("MAC is " + (result ? "right" : "wrong"));
-
-				int nonce = Integer.parseInt(getHeaderElement(smc, HEADER_NONCE ,HEADER_NONCE_NS)); //need to check with send 
-                long ts = Long.parseLong(getHeaderElement(smc,HEADER_TIMESTAMP,HEADER_TIMESTAMP_NS));
-                System.out.println("\nNonce = "+nonce+"\n");
-                System.out.println("\nTimestamp = "+ts+"\n");
-                
-                if(!isNonceValid(nonce,ts)) //if nonce not valid returns false! (discards message)
-                    return false;
-
+				System.out.println("DSIGN is " + (result ? "right" : "wrong"));
 				if (!result) {
 					return false;
 				}
+				
+				//Verify Nonce+Timestamp
+				int nonce = Integer.parseInt(getHeaderElement(smc, HEADER_NONCE ,HEADER_NONCE_NS)); //need to check with send 
+                long ts = Long.parseLong(getHeaderElement(smc,HEADER_TIMESTAMP,HEADER_TIMESTAMP_NS));
+                System.out.println("\nNonce = "+nonce);
+                System.out.println("Timestamp = "+ts);
+                
+                if(!isNonceValid(nonce,ts)) //if nonce not valid returns false! (discards message)
+                    return false;
 			}
 
 		} catch (Exception e) {
@@ -128,7 +121,8 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 			// e.printStackTrace();
 		}
 		System.out.println(getMessage(smc));
-
+		System.out.println("\n\n================================================\n");
+		System.out.println(String.format("%"+10+"s", "").replace(" ", "="));
 		return true;
 	}
 
@@ -230,8 +224,6 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 			// get header element value
 			String value = element.getValue();
 
-			// print received header
-			System.out.println("Header value is " + value);
 			return value;
 
 		} catch (Exception e) {
@@ -263,7 +255,6 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 		for (int i = 0; i < nl.getLength(); i++) {
 			if (nl.item(i).getNodeType() == Node.ELEMENT_NODE) {
 				SOAPElement se = (SOAPElement) nl.item(i);
-				System.out.println(se.getNodeName());
 				if (se.getNodeName().equals(tag)) {
 					return se.getValue();
 				}
@@ -287,11 +278,11 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
      * False:
      *       -Nonce does not exists, so it's a new... i'll add it!
      */
-    private boolean isNonceValid(int nonce, long nTs)/*throws NonceRepeatedException*/ {
+    private boolean isNonceValid(int nonce, long nTs) {
         
         long time = generateTimestamp();
         checkNonces(time);
-        if(!compareTime(time,nTs,NONCE_TIMEOUT)){// nonce not found! First message:
+        if(!compareTime(time,nTs,NONCE_TIMEOUT)){
             return false;
         } 
         else if (nonceMap.containsKey(nonce) && (nonceMap.get(nonce) == nTs) ) {

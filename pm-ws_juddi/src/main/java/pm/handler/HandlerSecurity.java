@@ -4,12 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.security.GeneralSecurityException;
-import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -17,9 +14,6 @@ import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
-import javax.crypto.KeyGenerator;
-
-import pm.exception.InvalidMessageDigestException;
 import utilities.ObjectUtil;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
@@ -108,36 +102,5 @@ public class HandlerSecurity {
 		cipher.update(bytes);
 
 		return cipher.verify(cipherDigest);
-	}
-
-	public Key generateKey() throws GeneralSecurityException, IOException {
-		// get an AES private key
-		System.out.println("Generating AES key ...");
-		KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-		keyGen.init(256);
-		Key key = keyGen.generateKey();
-
-		System.out.println("Finish generating AES key");
-		byte[] encoded = key.getEncoded();
-		System.out.println("Key:");
-		System.out.println(printHexBinary(encoded));
-
-		return key;
-	}
-
-	// - DIGEST - //
-	public static MessageDigest object2Hash(MessageDigest md, Object obj) throws NoSuchAlgorithmException, IOException {
-		if (md == null) {
-			md = MessageDigest.getInstance("SHA-256");
-		}
-		md.update(ObjectUtil.writeObjectBytes(obj));
-		return md;
-	}
-
-	public static byte[] digestMessage(MessageDigest md) throws InvalidMessageDigestException {
-		if (md == null) {
-			throw new InvalidMessageDigestException(); // needs to be corrected
-		}
-		return md.digest();
 	}
 }
