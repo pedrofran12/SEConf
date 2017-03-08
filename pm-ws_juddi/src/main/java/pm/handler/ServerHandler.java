@@ -37,7 +37,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     public static final String HEADER_TIMESTAMP = "timestamp";
     public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
     
-    private static final int NONCE_TIMEOUT = 2; //in minutes
+    private static final int NONCE_TIMEOUT = 2*60*1000; //in milliseconds
     
     private HashMap<Integer, Long> nonceMap = new HashMap<Integer, Long>();
 
@@ -291,10 +291,10 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
         
         long time = generateTimestamp();
         checkNonces(time);
-        if(compareTime(time,nTs,NONCE_TIMEOUT)){// nonce not found! First message:
+        if(!compareTime(time,nTs,NONCE_TIMEOUT)){// nonce not found! First message:
             return false;
         } 
-        else if (nonceMap.containsKey(nonce)) {
+        else if (nonceMap.containsKey(nonce) && (nonceMap.get(nonce) == nTs) ) {
             return false;
         }
         else{
@@ -306,10 +306,10 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     /*
      * If ts is older than ts2 = ERROR
      */
-    private boolean compareTime(long ts, long ts2, int minutes){
+    private boolean compareTime(long ts, long ts2, long timeout){
         if (ts2 > ts)
             return false; 
-        return (ts - ts2)<minutes*60*1000;
+        return (ts - ts2)<=timeout;
     }
     
     private void checkNonces(long timeGenerated){
