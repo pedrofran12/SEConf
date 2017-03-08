@@ -63,12 +63,12 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	}
 
 	private void daemonSaveState() {
-		new Runnable() {
+		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				saveState();
 			}
-		}.run();
+		}).start();
 	}
 
 	private void saveState() {
