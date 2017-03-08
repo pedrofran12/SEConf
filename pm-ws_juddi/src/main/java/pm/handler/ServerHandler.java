@@ -2,8 +2,11 @@ package pm.handler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -11,20 +14,32 @@ import javax.xml.soap.*;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.handler.soap.*;
 
+import org.apache.commons.net.ntp.NTPUDPClient;
+import org.apache.commons.net.ntp.TimeInfo;
 import org.w3c.dom.NodeList;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
+    
+    private HandlerSecurity _security;
 
-	private HandlerSecurity _security;
+    public static final String HEADER_KEY = "key";
+    public static final String HEADER_KEY_NS = "urn:key";
 
-	public static final String HEADER_KEY = "key";
-	public static final String HEADER_KEY_NS = "urn:key";
-
-	public static final String HEADER_MAC = "mac";
-	public static final String HEADER_MAC_NS = "urn:mac";
+    public static final String HEADER_MAC = "mac";
+    public static final String HEADER_MAC_NS = "urn:mac";
+    
+    public static final String HEADER_NONCE = "nonce";
+    public static final String HEADER_NONCE_NS = "urn:nonce";
+    
+    public static final String HEADER_TIMESTAMP = "timestamp";
+    public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
+    
+    private static final int NONCE_TIMEOUT = 2*60*1000; //in milliseconds
+    
+    private HashMap<Integer, Long> nonceMap = new HashMap<Integer, Long>();
 
 	public ServerHandler() throws NoSuchAlgorithmException, IOException {
 		_security = new HandlerSecurity();
@@ -54,7 +69,8 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));
 
 			} else {
-				System.out.println(getMessage(smc)); // <- remover isto faz com que esta merda falhe
+			    getMessage(smc);
+				//System.out.println(getMessage(smc)); // <- remover isto faz com que esta merda falhe
 
 				// message that is going to be sent from client to server
 
@@ -91,6 +107,14 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				// verify the MAC
 				boolean result = security.verifySignature(cipherDigest, plainBytes, publicKeyClient);
 				System.out.println("MAC is " + (result ? "right" : "wrong"));
+
+				int nonce = Integer.parseInt(getHeaderElement(smc, HEADER_NONCE ,HEADER_NONCE_NS)); //need to check with send 
+                long ts = Long.parseLong(getHeaderElement(smc,HEADER_TIMESTAMP,HEADER_TIMESTAMP_NS));
+                System.out.println("\nNonce = "+nonce+"\n");
+                System.out.println("\nTimestamp = "+ts+"\n");
+                
+                if(!isNonceValid(nonce,ts)) //if nonce not valid returns false! (discards message)
+                    return false;
 
 				if (!result) {
 					return false;
@@ -251,5 +275,79 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 		}
 		return null;
 	}
+
+	 /*
+     * Checks for nonce in map
+     * TRUE: 
+     *     - Checks for Timestamp of that nonce in map and received_nonce:
+     *     True:
+     *          - Within 2min: REPLAY ATTACK
+     *     FALSE:
+     *          - Outdated nonce, i'll update it!
+     * False:
+     *       -Nonce does not exists, so it's a new... i'll add it!
+     */
+    private boolean isNonceValid(int nonce, long nTs)/*throws NonceRepeatedException*/ {
+        
+        long time = generateTimestamp();
+        checkNonces(time);
+        if(!compareTime(time,nTs,NONCE_TIMEOUT)){// nonce not found! First message:
+            return false;
+        } 
+        else if (nonceMap.containsKey(nonce) && (nonceMap.get(nonce) == nTs) ) {
+            return false;
+        }
+        else{
+            nonceMap.put(nonce, nTs);
+            return true;
+        }
+    }
+    
+    /*
+     * If ts is older than ts2 = ERROR
+     */
+    private boolean compareTime(long ts, long ts2, long timeout){
+        if (ts2 > ts)
+            return false; 
+        return (ts - ts2)<=timeout;
+    }
+    
+    private void checkNonces(long timeGenerated){
+        for(int j : nonceMap.keySet()){
+            if(!compareTime(timeGenerated,nonceMap.get(j),NONCE_TIMEOUT))
+                nonceMap.remove(j);
+        }
+    }
+    
+    private long generateTimestamp(){
+        String[] hosts = new String[]{"0.pt.pool.ntp.org","1.europe.pool.ntp.org","0.europe.pool.ntp.org","2.europe.pool.ntp.org"};
+        TimeInfo ti = null;
+        
+        NTPUDPClient timeClient = new NTPUDPClient();
+        timeClient.setDefaultTimeout(5000); //after 5 seconds no reply
+        
+        for(String host : hosts){
+            try{
+                InetAddress hostAddr = InetAddress.getByName(host);
+                System.out.println("\nConnected to>" + hostAddr.getHostName() + "/" + hostAddr.getHostAddress()+"\n");
+                ti = timeClient.getTime(hostAddr);
+                break;
+                
+            }catch(Exception e){
+                ti = null;
+                //continue next host
+                //e.printStackTrace();
+            }
+        }
+        timeClient.close();
+        if(ti!=null){
+            return ti.getReturnTime();
+        }
+        else{
+            //generate new ts
+            Timestamp ts = new Timestamp(System.currentTimeMillis());
+            return ts.getTime();
+        }
+    }
 
 }
