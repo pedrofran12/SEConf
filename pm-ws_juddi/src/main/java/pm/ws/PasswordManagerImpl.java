@@ -3,8 +3,6 @@ package pm.ws;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jws.HandlerChain;
 import javax.jws.WebService;
@@ -20,11 +18,9 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private static final String SAVE_STATE_NAME = "./PasswordManager.serial";
 
 	private final Map<java.security.Key, TripletStore> password;
-	private final Lock saveStateLock;
 
 	private PasswordManagerImpl() {
 		password = new HashMap<>();
-		saveStateLock = new ReentrantLock(true);
 	}
 
 	public void register(Key publicKey) throws PasswordManagerException {
@@ -71,15 +67,13 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 		}).start();
 	}
 
-	private void saveState() {
-		saveStateLock.lock();
+	private synchronized void saveState() {
 		boolean saved = ObjectUtil.writeObjectFile(SAVE_STATE_NAME, this);
 		if (saved) {
 			System.out.println(">>> Saved state");
 		} else {
 			System.out.println(">>> Failed to save state");
 		}
-		saveStateLock.unlock();
 	}
 
 	public static PasswordManager getInstance() {
