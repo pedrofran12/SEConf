@@ -1,38 +1,22 @@
 package pm.handler;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.security.Key;
 import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.cert.Certificate;
 import java.util.Iterator;
 import java.util.Set;
 
 import javax.xml.soap.SOAPHeader;
-import javax.xml.ws.handler.HandlerResolver;
 import javax.jws.HandlerChain;
-import javax.xml.namespace.QName;
 import javax.xml.soap.*;
 import javax.xml.ws.handler.MessageContext;
-import javax.xml.ws.handler.MessageContext.Scope;
 import javax.xml.ws.handler.soap.*;
 
-import org.w3c.dom.NodeList;
+import pm.cli.SecureClient;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
-import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 @HandlerChain(file = "/handler-chain.xml")
 public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
-
-	private HandlerSecurity _security;
 
 	public static final String HEADER_KEY = "key";
 	public static final String HEADER_KEY_NS = "urn:key";
@@ -40,12 +24,15 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 	public static final String HEADER_MAC = "mac";
 	public static final String HEADER_MAC_NS = "urn:mac";
 
-	public ClientHandler() throws NoSuchAlgorithmException, IOException {
-		_security = new HandlerSecurity();
-	}
-
-	private HandlerSecurity getHandlerSecurity() {
-		return _security;
+	private static KeyStore _ks;
+	private static String _alias;
+	private static char[] _password;
+	
+	
+	public static void setHandler(KeyStore ks, String alias, char[] password){
+		_ks = ks;
+		_alias = alias;
+		_password = password;
 	}
 
 	@Override
@@ -63,11 +50,11 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 				final byte[] plainBytes = plainText.getBytes();
 
 				// SEGURANCA : MAC
-				HandlerSecurity security = getHandlerSecurity();
+				//HandlerSecurity security = getHandlerSecurity();
 				System.out.println("=======================\n\n\n\n\n");
 
 				// make MAC
-				byte[] cipherDigest = security.makeSignature(plainBytes);
+				byte[] cipherDigest = makeSignature(plainBytes);
 
 				// verify the MAC
 				// boolean result = security.verifyMAC(cipherDigest, plainBytes,
@@ -80,39 +67,39 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 				// message that is going to be sent from client to server
 
 				// obter mac value
-				String mac = getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS);
+				//String mac = getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS);
 
 				// SOAP Message nao tem mac
-				if (mac == null)
-					return false;
+				//if (mac == null)
+				//	return false;
 
 				// Remover da Header a componentes MAC
-				SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
-				NodeList nl = header.getChildNodes();
-				for (int i = 0; i < nl.getLength(); i++) {
-					if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
-						header.removeChild(nl.item(i));
-					}
-				}
-				header.normalize();
+				//SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
+				//NodeList nl = header.getChildNodes();
+				//for (int i = 0; i < nl.getLength(); i++) {
+				//	if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
+				//		header.removeChild(nl.item(i));
+				//	}
+				//}
+				//header.normalize();
 
 				// SOAP Message em string sem o elemento MAC da Header
-				final byte[] plainBytes = getMessage(smc).getBytes();
+				//final byte[] plainBytes = getMessage(smc).getBytes();
 
 				// SEGURANCA : MAC
-				HandlerSecurity security = getHandlerSecurity();
-				System.out.println("=======================\n\n\n\n\n");
+				//HandlerSecurity security = getHandlerSecurity();
+				//System.out.println("=======================\n\n\n\n\n");
 
 				// make MAC
-				byte[] cipherDigest = parseHexBinary(mac);
+				//byte[] cipherDigest = parseHexBinary(mac);
 
 				// verify the MAC
-				boolean result = security.verifySignature(cipherDigest, plainBytes/* , publicKeyServer */);
-				System.out.println("MAC is " + (result ? "right" : "wrong"));
+				//boolean result = verifySignature(cipherDigest, plainBytes);
+				//System.out.println("MAC is " + (result ? "right" : "wrong"));
 
-				if (!result) {
-					return false;
-				}
+				//if (!result) {
+				//	return false;
+				//}
 			}
 
 		} catch (Exception e) {
@@ -231,5 +218,13 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 			System.out.println("Erro getHeaderElement");
 		}
 		return null;
+	}
+	
+	private byte[] makeSignature(byte[] data) throws Exception{
+		return SecureClient.makeSignature(_ks, _alias, _password, data);
+	}
+	
+	private boolean verifySignature(byte[] signature, byte[] data) throws Exception{
+		return SecureClient.verifySignature(_ks, _alias, _password, signature, data);
 	}
 }

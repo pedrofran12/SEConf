@@ -1,4 +1,4 @@
-package pm.cli;
+package pm.ws;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import javax.crypto.Cipher;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 
-public class SecureClient {
+public class SecureServer{
 	
 	public static final String CIPHER_ALGORITHM = "RSA";
 	public static final String HASH_ALGORITHM = "SHA-256";
