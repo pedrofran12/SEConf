@@ -1,8 +1,8 @@
 package pm.handler;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.security.KeyStore;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Date;
@@ -13,10 +13,9 @@ import javax.xml.soap.*;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.handler.soap.*;
 
-import org.w3c.dom.NodeList;
+import pm.cli.SecureClient;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
-import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 //Nonce + Timestamp
 import java.net.InetAddress;
@@ -29,8 +28,6 @@ import org.apache.commons.net.ntp.TimeInfo;
 @HandlerChain(file = "/handler-chain.xml")
 public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 
-	private HandlerSecurity _security;
-
 	public static final String HEADER_DSIGN = "dsign";
 	public static final String HEADER_DSIGN_NS = "urn:dsign";
 
@@ -40,18 +37,19 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
     public static final String HEADER_TIMESTAMP = "timestamp";
     public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
 
-	public ClientHandler() throws NoSuchAlgorithmException, IOException {
-		_security = new HandlerSecurity();
-	}
-
-	private HandlerSecurity getHandlerSecurity() {
-		return _security;
+	private static KeyStore _ks;
+	private static String _alias;
+	private static char[] _password;
+	
+	
+	public static void setHandler(KeyStore ks, String alias, char[] password){
+		_ks = ks;
+		_alias = alias;
+		_password = password;
 	}
 
 	@Override
     public boolean handleMessage(SOAPMessageContext smc) {
-        
-
         Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
         String operation = smc.get(MessageContext.WSDL_OPERATION).toString();
         System.out.println("\nOutbound = " + outbound);
@@ -74,10 +72,8 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
                 final byte[] plainBytes = plainText.getBytes();
 
                 // SEGURANCA : DSIGN
-                HandlerSecurity security = getHandlerSecurity();
-
                 // make MAC
-                byte[] cipherDigest = security.makeSignature(plainBytes);
+				byte[] cipherDigest = makeSignature(plainBytes);
 
                 addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(cipherDigest));
             } 
@@ -85,41 +81,39 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
                 // message that is going to be sent from client to server
 
                 // Get DSIGN value
-                String mac = getHeaderElement(smc, HEADER_DSIGN, HEADER_DSIGN_NS);
+                //String mac = getHeaderElement(smc, HEADER_DSIGN, HEADER_DSIGN_NS);
 
                 // SOAP Message does not have DSIGN
-                if (mac == null)
-                    return false;
+            	//if (mac == null)
+            	//    return false;
 
                 // Remove from Header DSIGN components
-                SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
-                NodeList nl = header.getChildNodes();
-                for (int i = 0; i < nl.getLength(); i++) {
-                    if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN)) {
-                        header.removeChild(nl.item(i));
-                    }
-                }
-                header.normalize();
+            	//SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
+            	//NodeList nl = header.getChildNodes();
+            	//for (int i = 0; i < nl.getLength(); i++) {
+            	//    if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN)) {
+            	//        header.removeChild(nl.item(i));
+            	//    }
+            	//}
+            	//header.normalize();
 
                 // SOAP Message in bytes without DSIGN from Header
-                final byte[] plainBytes = getMessage(smc).getBytes();
+            	//final byte[] plainBytes = getMessage(smc).getBytes();
 
                 // SEGURANCA : MAC
-                HandlerSecurity security = getHandlerSecurity();
+            	//HandlerSecurity security = getHandlerSecurity();
 
                 // make DSIGN
-                byte[] cipherDigest = parseHexBinary(mac);
+            	//byte[] cipherDigest = parseHexBinary(mac);
 
                 // verify the DSIGN
-                boolean result = security.verifySignature(cipherDigest, plainBytes);
-                System.out.println("\nDSIGN is " + (result ? "right" : "wrong"));
+            	//boolean result = security.verifySignature(cipherDigest, plainBytes);
+            	//System.out.println("\nDSIGN is " + (result ? "right" : "wrong"));
 
-                if (!result) {
-                    return false;
-                }
-
+            	//if (!result) {
+            	//   return false;
+            	//}
             }
-
         } catch (Exception e) {
             System.out.print("Caught exception in handleMessage: ");
             System.out.println(e);
@@ -277,4 +271,11 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
         }
     }
     
+	private byte[] makeSignature(byte[] data) throws Exception{
+		return SecureClient.makeSignature(_ks, _alias, _password, data);
+	}
+	
+	private boolean verifySignature(byte[] signature, byte[] data) throws Exception{
+		return SecureClient.verifySignature(_ks, _alias, _password, signature, data);
+	}
 }

@@ -1,25 +1,26 @@
 package pm.cli;
 
-import java.security.cert.Certificate;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.*;
 
 import javax.xml.ws.*;
+
+import com.sun.xml.ws.encoding.MtomCodec.ByteArrayBuffer;
+
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 
 import pt.ulisboa.tecnico.seconf.ws.uddi.UDDINaming;
 import utilities.ObjectUtil;
 import pm.exception.cli.AlreadyExistsLoggedUserException;
+import pm.exception.cli.NoSessionException;
+import pm.handler.ClientHandler;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
-
 
 import pm.ws.*;// classes generated from WSDL
 
@@ -101,17 +102,22 @@ public class Client {
 		setKeyStore(ks);
 		setKeyStoreAlias(alias);
 		setKeyStorePassword(password);
+		ClientHandler.setHandler(ks, alias, password);
 	}
 
 	public void register_user() throws Exception {
+		if(!isSessionAlive())
+			throw new NoSessionException();
 		pm.ws.Key k = getPublicKey();
 		_pm.register(k);
 	}
 
 	public void save_password(byte[] domain, byte[] username, byte[] password){
     	try {
+    		if(!isSessionAlive())
+    			throw new NoSessionException();
     		byte[] hashedDomain = hash(domain);
-    		byte[] hashedUsername= hash(username);
+    		byte[] hashedUsername = hash(domain, username);
     		byte[] cipheredPassword = cipher(password);
     		_pm.put(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword);
     	} catch (Exception pme) {
@@ -123,9 +129,11 @@ public class Client {
       byte[] password = null;
       
       try{
+	  		if(!isSessionAlive())
+	  			throw new NoSessionException();
     		byte[] hashedDomain = hash(domain);
-    		byte[] hashedUsername= hash(username);
-    		byte[] passwordCiphered = _pm.get(getPublicKey(), hashedDomain, hashedUsername);
+    		byte[] hashedUsername = hash(domain, username);
+     		byte[] passwordCiphered = _pm.get(getPublicKey(), hashedDomain, hashedUsername);
     		password = decipher(passwordCiphered);
       }catch(Exception pme){
           pme.printStackTrace();
@@ -161,6 +169,18 @@ public class Client {
 		return k;
 	}
 	
+	private pm.ws.Key getPrivateKey() throws Exception {
+		KeyStore keystore = getKeyStore();
+		String alias = getKeyStoreAlias();
+		char[] password = getKeyStorePassword();
+		Key publicKey = SecureClient.getPrivateKey(keystore, alias, password);
+		
+		
+		pm.ws.Key k = new pm.ws.Key();
+		k.setKey(ObjectUtil.writeObjectBytes(publicKey));
+		return k;
+	}
+	
 	private byte[] cipher(byte[] plainText) throws Exception{
   		KeyStore ks = getKeyStore();
   		String ksAlias = getKeyStoreAlias();
@@ -180,8 +200,13 @@ public class Client {
   		return plainText;
 	}
 	
-	private byte[] hash(byte[] data) throws NoSuchAlgorithmException{
-		byte[] hash = SecureClient.hash(data);
+	private byte[] hash(byte[]... data) throws Exception{
+		String dataToHash = "";
+		for(byte[] b : data)
+			dataToHash += printHexBinary(b);
+		dataToHash += printHexBinary(getPrivateKey().getKey());
+		
+		byte[] hash = SecureClient.hash(parseHexBinary(dataToHash));
 		return hash;
 	}
 	
