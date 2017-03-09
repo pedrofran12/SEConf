@@ -22,7 +22,7 @@ public abstract class ObjectUtil {
 			oi = new ObjectInputStream(is);
 			obj = c.cast(oi.readObject());
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		} finally {
 			try {
 				oi.close();
@@ -42,7 +42,7 @@ public abstract class ObjectUtil {
 			oo.flush();
 			success = true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		} finally {
 			try {
 				oo.close();
@@ -59,7 +59,7 @@ public abstract class ObjectUtil {
 		try {
 			obj = readObject(bais, c);
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		} finally {
 			try {
 				bais.close();
@@ -79,7 +79,7 @@ public abstract class ObjectUtil {
 				array = baos.toByteArray();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		} finally {
 			try {
 				baos.close();
@@ -97,7 +97,7 @@ public abstract class ObjectUtil {
 			fis = new FileInputStream(file);
 			obj = readObject(fis, c);
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		} finally {
 			try {
 				fis.close();
@@ -115,7 +115,7 @@ public abstract class ObjectUtil {
 			fos = new FileOutputStream(file);
 			success = writeObject(obj, fos);
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		} finally {
 			try {
 				fos.close();
