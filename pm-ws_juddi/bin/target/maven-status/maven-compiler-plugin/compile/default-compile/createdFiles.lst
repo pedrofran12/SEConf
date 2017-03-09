@@ -1,8 +1,0 @@
-pm/exception/KeyAlreadyExistsException.class
-pm/PasswordManagerImpl.class
-pt/ulisboa/tecnico/seconf/ws/uddi/UDDINaming.class
-pt/ulisboa/tecnico/seconf/ws/uddi/UDDIRecord.class
-pm/exception/InvalidKeyException.class
-pm/Key.class
-pm/PasswordManagerMain.class
-pm/PasswordManager.class
