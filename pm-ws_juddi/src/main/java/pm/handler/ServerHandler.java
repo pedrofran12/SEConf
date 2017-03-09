@@ -9,6 +9,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Date;
 
 import javax.xml.soap.*;
 import javax.xml.ws.handler.MessageContext;
@@ -107,8 +108,8 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				//Verify Nonce+Timestamp
 				int nonce = Integer.parseInt(getHeaderElement(smc, HEADER_NONCE ,HEADER_NONCE_NS)); //need to check with send 
                 long ts = Long.parseLong(getHeaderElement(smc,HEADER_TIMESTAMP,HEADER_TIMESTAMP_NS));
-                System.out.println("\nNonce = "+nonce);
-                System.out.println("Timestamp = "+ts);
+                System.out.println("\nNonce: "+nonce);
+                System.out.println("Timestamp: "+ new Date(ts));
                 
                 if(!isNonceValid(nonce,ts)) //if nonce not valid returns false! (discards message)
                     return false;
@@ -121,8 +122,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 			// e.printStackTrace();
 		}
 		System.out.println(getMessage(smc));
-		System.out.println("\n\n================================================\n");
-		System.out.println(String.format("%"+10+"s", "").replace(" ", "="));
+		System.out.println(String.format("%"+40+"s", "").replace(" ", "="));
 		return true;
 	}
 

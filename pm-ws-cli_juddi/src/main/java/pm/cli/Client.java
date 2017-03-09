@@ -60,7 +60,7 @@ public class Client {
 
 		Client c = new Client(port);
 
-		// ****** obter keystore ******
+		// ****** Get Keystore ******
 		String alias = "client";
 		char[] password = "benfica".toCharArray();
 		KeyStore ks = KeyStore.getInstance("JKS");
@@ -71,15 +71,9 @@ public class Client {
 		
 		c.init(ks, alias, password);
 		c.register_user();
-		c.save_password("fuckybook.com".getBytes(), "pedro".getBytes(), "chupa".getBytes());
-		System.out.println(Base64.getEncoder().encodeToString("fuckybook.com".getBytes()));
-		System.out.println(new String(c.retrieve_password("fuckybook.com".getBytes(), "pedro".getBytes())));
-		c.doCode();
-	}
-
-	private void doCode() {
-		// Here is the code for your test//
-		// just do: pm.something();
+		c.save_password("facebook.com".getBytes(), "pedro".getBytes(), "seconf".getBytes());
+		System.out.println("Ciphered Password: "+Base64.getEncoder().encodeToString("facebook.com".getBytes()));
+		System.out.println("Password: "+new String(c.retrieve_password("facebook.com".getBytes(), "pedro".getBytes())));
 	}
 
 	public Client(PasswordManager port) {

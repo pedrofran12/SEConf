@@ -37,7 +37,7 @@ public class HandlerSecurity {
 			X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
 			KeyFactory kf = KeyFactory.getInstance("RSA");
 			_publicKeyServer = kf.generatePublic(spec);
-			System.out.println(_publicKeyServer.toString() + "\n\n\n\n\n\n===");
+			System.out.println("\n"+_publicKeyServer.toString() + "\n");
 
 			KeyStore ks = KeyStore.getInstance("JKS");
 			InputStream readStream = new FileInputStream("src/main/resources/KeyStore.jks");
@@ -98,20 +98,4 @@ public class HandlerSecurity {
 
 		return key;
 	}
-
-	// - DIGEST - //
-	/*
-	 * public static MessageDigest object2Hash(MessageDigest md, Object obj)
-	 * throws NoSuchAlgorithmException, IOException {
-	 * 
-	 * if (md == null) { md = MessageDigest.getInstance("SHA-256"); }
-	 * md.update(object2Bytes(obj)); return md; }
-	 * 
-	 * public static byte[] digestMessage(MessageDigest md) throws
-	 * InvalidMessageDigestException {
-	 * 
-	 * if (md == null) { throw new InvalidMessageDigestException(); // needs to
-	 * be corrected } return md.digest(); }
-	 */
-	// - KEY PART -
 }
