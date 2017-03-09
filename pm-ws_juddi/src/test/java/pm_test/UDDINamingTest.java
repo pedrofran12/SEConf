@@ -49,7 +49,6 @@ public class UDDINamingTest {
     }
 
     // tests
-
     @Test
     public void test() throws Exception {
 
