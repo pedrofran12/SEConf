@@ -1,9 +1,5 @@
 package pm.ws;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.MessageDigest;
@@ -14,7 +10,6 @@ import java.security.Signature;
 import java.security.cert.Certificate;
 
 import javax.crypto.Cipher;
-import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 
 public class SecureServer{

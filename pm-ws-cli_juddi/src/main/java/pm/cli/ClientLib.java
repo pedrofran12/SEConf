@@ -5,7 +5,6 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 import java.security.Key;
 import java.security.KeyStore;
-import java.util.Scanner;
 
 import pm.exception.cli.AlreadyExistsLoggedUserException;
 import pm.exception.cli.NoSessionException;
@@ -15,7 +14,6 @@ import utilities.ObjectUtil;
 
 public class ClientLib {
 	private PasswordManager _pm;
-	private Scanner keyboardSc;
 	private KeyStore _ks;
 	private String _alias;
 	private char[] _password;
@@ -23,7 +21,6 @@ public class ClientLib {
 	
 	public ClientLib(PasswordManager port) {
 		_pm = port;
-		keyboardSc = new Scanner(System.in);
 	}
 
 	public void init(KeyStore ks, String alias, char[] password) throws AlreadyExistsLoggedUserException {

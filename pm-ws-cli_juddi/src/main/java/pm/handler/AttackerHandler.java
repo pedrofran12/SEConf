@@ -2,18 +2,14 @@ package pm.handler;
 
 import java.io.ByteArrayOutputStream;
 import java.security.NoSuchAlgorithmException;
-import java.security.KeyStore;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.Date;
 
 import javax.xml.soap.SOAPHeader;
 import javax.jws.HandlerChain;
 import javax.xml.soap.*;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.handler.soap.*;
-
-import pm.cli.SecureClient;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
