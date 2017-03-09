@@ -7,9 +7,12 @@ import java.security.Key;
 import java.security.KeyStore;
 
 import pm.exception.cli.AlreadyExistsLoggedUserException;
+import pm.exception.cli.ClientException;
+import pm.exception.cli.InvalidKeyStoreException;
 import pm.exception.cli.NoSessionException;
 import pm.handler.ClientHandler;
 import pm.ws.PasswordManager;
+import pm.ws.PasswordManagerException_Exception;
 import utilities.ObjectUtil;
 
 public class ClientLib {
@@ -18,13 +21,12 @@ public class ClientLib {
 	private String _alias;
 	private char[] _password;
 
-	
 	public ClientLib(PasswordManager port) {
 		_pm = port;
 	}
 
 	public void init(KeyStore ks, String alias, char[] password) throws AlreadyExistsLoggedUserException {
-		if(isSessionAlive())
+		if (isSessionAlive())
 			throw new AlreadyExistsLoggedUserException();
 		setKeyStore(ks);
 		setKeyStoreAlias(alias);
@@ -33,110 +35,121 @@ public class ClientLib {
 	}
 
 	public void register_user() throws Exception {
-		if(!isSessionAlive())
+		if (!isSessionAlive())
 			throw new NoSessionException();
 		pm.ws.Key k = getPublicKey();
 		_pm.register(k);
 	}
 
-	public void save_password(byte[] domain, byte[] username, byte[] password){
-    	try {
-    		if(!isSessionAlive())
-    			throw new NoSessionException();
-    		byte[] hashedDomain = hash(domain);
-    		byte[] hashedUsername = hash(domain, username);
-    		byte[] cipheredPassword = cipher(password);
-    		_pm.put(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword);
-    	} catch (Exception pme) {
-    		pme.printStackTrace();
-    	}
-    }
+	public void save_password(byte[] domain, byte[] username, byte[] password)
+			throws PasswordManagerException_Exception, ClientException {
+		if (!isSessionAlive())
+			throw new NoSessionException();
+		byte[] hashedDomain = hash(domain);
+		byte[] hashedUsername = hash(domain, username);
+		byte[] cipheredPassword = cipher(password);
+		_pm.put(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword);
+	}
 
-  public byte[] retrieve_password(byte[] domain, byte[] username){
-      byte[] password = null;
-      
-      try{
-	  		if(!isSessionAlive())
-	  			throw new NoSessionException();
-    		byte[] hashedDomain = hash(domain);
-    		byte[] hashedUsername = hash(domain, username);
-     		byte[] passwordCiphered = _pm.get(getPublicKey(), hashedDomain, hashedUsername);
-    		password = decipher(passwordCiphered);
-      }catch(Exception pme){
-          pme.printStackTrace();
-      }
+	public byte[] retrieve_password(byte[] domain, byte[] username)
+			throws PasswordManagerException_Exception, ClientException {
+		if (!isSessionAlive())
+			throw new NoSessionException();
+		byte[] hashedDomain = hash(domain);
+		byte[] hashedUsername = hash(domain, username);
+		byte[] passwordCiphered = _pm.get(getPublicKey(), hashedDomain, hashedUsername);
+		byte[] password = decipher(passwordCiphered);
 
-      return password;
-  }
-  
+		return password;
+	}
+
 	public void close() {
 		setKeyStore(null);
 		setKeyStoreAlias(null);
 		setKeyStorePassword(null);
 	}
-  
+
 	private KeyStore getKeyStore() {
 		return _ks;
 	}
-	
-	
-	private boolean isSessionAlive(){
-		return getKeyStore()!=null && getKeyStoreAlias()!=null && getKeyStorePassword()!=null;
+
+	private boolean isSessionAlive() {
+		return getKeyStore() != null && getKeyStoreAlias() != null && getKeyStorePassword() != null;
 	}
 
-	private pm.ws.Key getPublicKey() throws Exception {
-		KeyStore keystore = getKeyStore();
-		String alias = getKeyStoreAlias();
-		char[] password = getKeyStorePassword();
-		Key publicKey = SecureClient.getPublicKey(keystore, alias, password);
-		
-		
-		pm.ws.Key k = new pm.ws.Key();
-		k.setKey(ObjectUtil.writeObjectBytes(publicKey));
-		return k;
-	}
-	
-	private pm.ws.Key getPrivateKey() throws Exception {
-		KeyStore keystore = getKeyStore();
-		String alias = getKeyStoreAlias();
-		char[] password = getKeyStorePassword();
-		Key publicKey = SecureClient.getPrivateKey(keystore, alias, password);
-		
-		
-		pm.ws.Key k = new pm.ws.Key();
-		k.setKey(ObjectUtil.writeObjectBytes(publicKey));
-		return k;
-	}
-	
-	private byte[] cipher(byte[] plainText) throws Exception{
-  		KeyStore ks = getKeyStore();
-  		String ksAlias = getKeyStoreAlias();
-  		char[] ksPassword = getKeyStorePassword();
-		
-  		byte[] cipheredPlainText = SecureClient.cipher(ks, ksAlias, ksPassword, plainText);
-  		return cipheredPlainText;
+	private pm.ws.Key getPublicKey() throws InvalidKeyStoreException {
+		try {
+			KeyStore keystore = getKeyStore();
+			String alias = getKeyStoreAlias();
+			char[] password = getKeyStorePassword();
+			Key publicKey = SecureClient.getPublicKey(keystore, alias, password);
+
+			pm.ws.Key k = new pm.ws.Key();
+			k.setKey(ObjectUtil.writeObjectBytes(publicKey));
+			return k;
+		} catch (Exception e) {
+			throw new InvalidKeyStoreException();
+		}
 	}
 
-	
-	private byte[] decipher(byte[] cipheredPlainText) throws Exception{
-  		KeyStore ks = getKeyStore();
-  		String ksAlias = getKeyStoreAlias();
-  		char[] ksPassword = getKeyStorePassword();
-		
-  		byte[] plainText = SecureClient.decipher(ks, ksAlias, ksPassword, cipheredPlainText);
-  		return plainText;
+	private pm.ws.Key getPrivateKey() throws InvalidKeyStoreException {
+		try {
+			KeyStore keystore = getKeyStore();
+			String alias = getKeyStoreAlias();
+			char[] password = getKeyStorePassword();
+			Key publicKey = SecureClient.getPrivateKey(keystore, alias, password);
+
+			pm.ws.Key k = new pm.ws.Key();
+			k.setKey(ObjectUtil.writeObjectBytes(publicKey));
+			return k;
+		} catch (Exception e) {
+			throw new InvalidKeyStoreException();
+		}
 	}
-	
-	private byte[] hash(byte[]... data) throws Exception{
+
+	private byte[] cipher(byte[] plainText) {
+		KeyStore ks = getKeyStore();
+		String ksAlias = getKeyStoreAlias();
+		char[] ksPassword = getKeyStorePassword();
+
+		byte[] cipheredPlainText = null;
+		try {
+			cipheredPlainText = SecureClient.cipher(ks, ksAlias, ksPassword, plainText);
+		} catch (Exception e) {
+			System.out.println("Exception: " + e.getMessage());
+		}
+		return cipheredPlainText;
+	}
+
+	private byte[] decipher(byte[] cipheredPlainText) {
+		KeyStore ks = getKeyStore();
+		String ksAlias = getKeyStoreAlias();
+		char[] ksPassword = getKeyStorePassword();
+
+		byte[] plainText = null;
+		try {
+			plainText = SecureClient.decipher(ks, ksAlias, ksPassword, cipheredPlainText);
+		} catch (Exception e) {
+			System.out.println("Exception: " + e.getMessage());
+		}
+		return plainText;
+	}
+
+	private byte[] hash(byte[]... data) throws InvalidKeyStoreException {
 		String dataToHash = "";
-		for(byte[] b : data)
+		for (byte[] b : data)
 			dataToHash += printHexBinary(b);
 		dataToHash += printHexBinary(getPrivateKey().getKey());
-		
-		byte[] hash = SecureClient.hash(parseHexBinary(dataToHash));
+
+		byte[] hash = null;
+		try {
+			hash = SecureClient.hash(parseHexBinary(dataToHash));
+		} catch (Exception e) {
+			System.out.println("Exception: " + e.getMessage());
+		}
 		return hash;
 	}
-	
+
 	private void setKeyStore(KeyStore k) {
 		_ks = k;
 	}

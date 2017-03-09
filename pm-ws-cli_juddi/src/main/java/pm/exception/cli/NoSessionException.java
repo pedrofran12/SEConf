@@ -1,6 +1,6 @@
 package pm.exception.cli;
 
-public class NoSessionException extends Exception {
+public class NoSessionException extends ClientException {
     private static final long serialVersionUID = 1L;
 
     protected static final String message = "No opened session";

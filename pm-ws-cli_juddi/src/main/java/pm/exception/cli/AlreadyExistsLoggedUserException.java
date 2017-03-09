@@ -1,7 +1,7 @@
 package pm.exception.cli;
 
 
-public class AlreadyExistsLoggedUserException extends Exception {
+public class AlreadyExistsLoggedUserException extends ClientException {
 
     private static final long serialVersionUID = 1L;
 
