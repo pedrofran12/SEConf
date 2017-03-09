@@ -21,7 +21,7 @@ public class PasswordManagerMain {
 		Endpoint endpoint = null;
 		UDDINaming uddiNaming = null;
 		try {
-			endpoint = Endpoint.create(new PasswordManagerImpl());
+			endpoint = Endpoint.create(PasswordManagerImpl.getInstance());
 
 			// publish endpoint
 			System.out.printf("Starting %s%n", url);
