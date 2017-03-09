@@ -1,6 +1,5 @@
 pm/exception/KeyAlreadyExistsException.class
 pm/ws/PasswordManagerMain.class
-pm/handler/HandlerSecurity.class
 pm/ws/PasswordManagerImpl.class
 pm/ws/Key.class
 pm/exception/UnknownUsernameDomainException.class
@@ -20,3 +19,4 @@ pm/ws/triplet/Triplet.class
 pm/exception/InvalidKeyException.class
 pm/exception/InvalidDomainException.class
 pm/exception/UnauthorizedRequestException.class
+pm/ws/SecureServer.class
