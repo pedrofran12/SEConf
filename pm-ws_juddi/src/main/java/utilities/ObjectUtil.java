@@ -22,7 +22,7 @@ public abstract class ObjectUtil {
 			oi = new ObjectInputStream(is);
 			obj = c.cast(oi.readObject());
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		} finally {
 			try {
 				oi.close();
