@@ -104,13 +104,13 @@ public class Client_Test {
     }
 
     @Test(expected = InvalidKeyStoreException.class) //A corrigir
-    public void testRegisterUser_InvalidKey() throws ClientException, PasswordManagerException_Exception {
+    public void testRegisterUser_InvalidKey() throws ClientException, PasswordManagerException_Exception, InvalidKeyException_Exception, KeyAlreadyExistsException_Exception {
         c.init(null, alias, "hi".toCharArray());
         c.register_user();
     }
     
-    @Test(expected = com.sun.xml.ws.fault.ServerSOAPFaultException.class) //com.sun.xml.ws.fault.ServerSOAPFaultException = KeyAlreadyExists!
-    public void testRegisterUser_KeyAlreadyExists() throws ClientException,PasswordManagerException_Exception {
+    @Test(expected = KeyAlreadyExistsException_Exception.class) //com.sun.xml.ws.fault.ServerSOAPFaultException = KeyAlreadyExists!
+    public void testRegisterUser_KeyAlreadyExists() throws ClientException, InvalidKeyException_Exception, KeyAlreadyExistsException_Exception{
         char[] password = "reborn".toCharArray();
         KeyStore ks = getKeyStore("KeyStore-reborn",password);
         c.init(ks, alias, password);
@@ -135,7 +135,7 @@ public class Client_Test {
     }
     
     @Test(expected = InvalidDomainException.class)
-    public void testRetrievePasswordInvalidDomain() throws ClientException,PasswordManagerException_Exception {
+    public void testRetrievePasswordInvalidDomain() throws ClientException,PasswordManagerException_Exception, InvalidKeyException_Exception, KeyAlreadyExistsException_Exception {
         char[] password = "augusto".toCharArray();
         KeyStore ks = getKeyStore("KeyStore-augusto",password);
         c.init(ks, alias, password);
@@ -146,7 +146,7 @@ public class Client_Test {
     }
 
     @Test(expected = InvalidUsernameException.class)
-    public void testRetrievePasswordInvalidUsername() throws ClientException,PasswordManagerException_Exception {
+    public void testRetrievePasswordInvalidUsername() throws ClientException,PasswordManagerException_Exception, InvalidKeyException_Exception, KeyAlreadyExistsException_Exception {
         char[] password = "alejandro".toCharArray();
         KeyStore ks = getKeyStore("KeyStore-alejandro",password);
         c.init(ks, alias, password);

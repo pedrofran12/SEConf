@@ -46,7 +46,7 @@ public class TripletStore implements Serializable {
         }
     }
 
-    public byte[] get(byte[] domain, byte[] username) throws PasswordManagerException{
+    public byte[] get(byte[] domain, byte[] username) throws PasswordManagerException {
         PasswordManagerException possibleException = null;
         
         rLock.lock();
