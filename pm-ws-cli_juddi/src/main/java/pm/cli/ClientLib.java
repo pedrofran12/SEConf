@@ -6,12 +6,21 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import java.security.Key;
 import java.security.KeyStore;
 
-import pm.exception.cli.*;
+import pm.exception.cli.AlreadyExistsLoggedUserException;
+import pm.exception.cli.ClientException;
+import pm.exception.cli.InvalidDomainException;
+import pm.exception.cli.InvalidKeyStoreException;
+import pm.exception.cli.InvalidPasswordException;
+import pm.exception.cli.InvalidUsernameException;
+import pm.exception.cli.NoSessionException;
 import pm.handler.ClientHandler;
+import pm.ws.InvalidDomainException_Exception;
 import pm.ws.InvalidKeyException_Exception;
+import pm.ws.InvalidPasswordException_Exception;
+import pm.ws.InvalidUsernameException_Exception;
 import pm.ws.KeyAlreadyExistsException_Exception;
 import pm.ws.PasswordManager;
-import pm.ws.PasswordManagerException_Exception;
+import pm.ws.UnknownUsernameDomainException_Exception;
 import utilities.ObjectUtil;
 
 public class ClientLib {
@@ -24,18 +33,19 @@ public class ClientLib {
 		_pm = port;
 	}
 
-	public void init(KeyStore ks, String alias, char[] password) throws ClientException{
+	public void init(KeyStore ks, String alias, char[] password) throws ClientException {
 		if (isSessionAlive())
 			throw new AlreadyExistsLoggedUserException();
-		if(ks==null || alias == null || password == null)
-		    throw new InvalidKeyStoreException();
+		if (ks == null || alias == null || password == null)
+			throw new InvalidKeyStoreException();
 		setKeyStore(ks);
 		setKeyStoreAlias(alias);
 		setKeyStorePassword(password);
 		ClientHandler.setHandler(ks, alias, password);
 	}
 
-	public void register_user() throws ClientException, InvalidKeyException_Exception, KeyAlreadyExistsException_Exception {
+	public void register_user()
+			throws ClientException, InvalidKeyException_Exception, KeyAlreadyExistsException_Exception {
 		if (!isSessionAlive())
 			throw new NoSessionException();
 		pm.ws.Key k = getPublicKey();
@@ -43,15 +53,16 @@ public class ClientLib {
 	}
 
 	public void save_password(byte[] domain, byte[] username, byte[] password)
-			throws PasswordManagerException_Exception, ClientException {
+			throws InvalidKeyException_Exception, InvalidDomainException_Exception, InvalidUsernameException_Exception,
+			InvalidPasswordException_Exception, ClientException {
 		if (!isSessionAlive())
 			throw new NoSessionException();
-		if(domain==null)
-		    throw new InvalidDomainException();
-		if(username==null)
-		    throw new InvalidUsernameException();
-		if(password==null)
-		    throw new InvalidPasswordException();
+		if (domain == null)
+			throw new InvalidDomainException();
+		if (username == null)
+			throw new InvalidUsernameException();
+		if (password == null)
+			throw new InvalidPasswordException();
 		byte[] hashedDomain = hash(domain);
 		byte[] hashedUsername = hash(domain, username);
 		byte[] cipheredPassword = cipher(password);
@@ -59,13 +70,14 @@ public class ClientLib {
 	}
 
 	public byte[] retrieve_password(byte[] domain, byte[] username)
-			throws PasswordManagerException_Exception, ClientException {
+			throws InvalidKeyException_Exception, InvalidDomainException_Exception, InvalidUsernameException_Exception,
+			UnknownUsernameDomainException_Exception, ClientException {
 		if (!isSessionAlive())
 			throw new NoSessionException();
-		if(domain==null)
-            throw new InvalidDomainException();
-        if(username==null)
-            throw new InvalidUsernameException();
+		if (domain == null)
+			throw new InvalidDomainException();
+		if (username == null)
+			throw new InvalidUsernameException();
 		byte[] hashedDomain = hash(domain);
 		byte[] hashedUsername = hash(domain, username);
 		byte[] passwordCiphered = _pm.get(getPublicKey(), hashedDomain, hashedUsername);

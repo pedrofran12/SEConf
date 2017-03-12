@@ -1,16 +1,19 @@
 package pm.cli;
 
+import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
+
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.KeyStore;
-import java.util.*;
+import java.util.Base64;
+import java.util.Map;
 
-import javax.xml.ws.*;
+import javax.xml.ws.BindingProvider;
 
-import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
-
+// classes generated from WSDL
+import pm.ws.PasswordManager;
+import pm.ws.PasswordManagerImplService;
 import pt.ulisboa.tecnico.seconf.ws.uddi.UDDINaming;
-import pm.ws.*;// classes generated from WSDL
 
 public class Client {
 	public static void main(String[] args) throws Exception {
