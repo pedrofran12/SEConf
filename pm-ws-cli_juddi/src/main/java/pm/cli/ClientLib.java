@@ -6,10 +6,7 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import java.security.Key;
 import java.security.KeyStore;
 
-import pm.exception.cli.AlreadyExistsLoggedUserException;
-import pm.exception.cli.ClientException;
-import pm.exception.cli.InvalidKeyStoreException;
-import pm.exception.cli.NoSessionException;
+import pm.exception.cli.*;
 import pm.handler.ClientHandler;
 import pm.ws.PasswordManager;
 import pm.ws.PasswordManagerException_Exception;
@@ -25,16 +22,18 @@ public class ClientLib {
 		_pm = port;
 	}
 
-	public void init(KeyStore ks, String alias, char[] password) throws AlreadyExistsLoggedUserException {
+	public void init(KeyStore ks, String alias, char[] password) throws ClientException{
 		if (isSessionAlive())
 			throw new AlreadyExistsLoggedUserException();
+		if(ks==null || alias == null || password == null)
+		    throw new InvalidKeyStoreException();
 		setKeyStore(ks);
 		setKeyStoreAlias(alias);
 		setKeyStorePassword(password);
 		ClientHandler.setHandler(ks, alias, password);
 	}
 
-	public void register_user() throws Exception {
+	public void register_user() throws PasswordManagerException_Exception, ClientException {
 		if (!isSessionAlive())
 			throw new NoSessionException();
 		pm.ws.Key k = getPublicKey();
@@ -45,6 +44,12 @@ public class ClientLib {
 			throws PasswordManagerException_Exception, ClientException {
 		if (!isSessionAlive())
 			throw new NoSessionException();
+		if(domain==null)
+		    throw new InvalidDomainException();
+		if(username==null)
+		    throw new InvalidUsernameException();
+		if(password==null)
+		    throw new InvalidPasswordException();
 		byte[] hashedDomain = hash(domain);
 		byte[] hashedUsername = hash(domain, username);
 		byte[] cipheredPassword = cipher(password);
@@ -55,6 +60,10 @@ public class ClientLib {
 			throws PasswordManagerException_Exception, ClientException {
 		if (!isSessionAlive())
 			throw new NoSessionException();
+		if(domain==null)
+            throw new InvalidDomainException();
+        if(username==null)
+            throw new InvalidUsernameException();
 		byte[] hashedDomain = hash(domain);
 		byte[] hashedUsername = hash(domain, username);
 		byte[] passwordCiphered = _pm.get(getPublicKey(), hashedDomain, hashedUsername);

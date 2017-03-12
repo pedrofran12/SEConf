@@ -14,7 +14,6 @@
 			<artifactId>jaxws-rt</artifactId>
 			<version>2.2.10</version>
 		</dependency>
-
 		<!-- JAX-R API -->
 		<dependency>
 			<groupId>javax.xml.registry</groupId>
@@ -81,7 +80,8 @@
 					<artifactId>geronimo-stax-api_1.0_spec</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency><!-- JUnit -->
+		</dependency>
+        <!-- JUnit -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
