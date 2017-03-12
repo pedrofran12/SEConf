@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "InvalidDomainException", propOrder = {
     "message"
 })
-public class InvalidDomainException extends PasswordManagerException {
+public class InvalidDomainException extends Exception {
 
     private static final long serialVersionUID = 1L;
 

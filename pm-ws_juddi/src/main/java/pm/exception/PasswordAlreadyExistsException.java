@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "PasswordAlreadyExistsException", propOrder = {
     "message"
 })
-public class PasswordAlreadyExistsException extends PasswordManagerException {
+public class PasswordAlreadyExistsException extends Exception {
 
     private static final long serialVersionUID = 1L;
 

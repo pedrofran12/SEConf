@@ -8,84 +8,63 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import pm.exception.*;
 
 public class TripletStore implements Serializable {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private final List<Triplet> store;
-    private final Lock wLock;
-    private final Lock rLock;
+	private final List<Triplet> store;
+	private final Lock wLock;
+	private final Lock rLock;
 
-    public TripletStore() {
-        store = new ArrayList<>();
-        ReentrantReadWriteLock rrwl = new ReentrantReadWriteLock(true);
-        wLock = rrwl.writeLock();
-        rLock = rrwl.readLock();
-    }
+	public TripletStore() {
+		store = new ArrayList<>();
+		ReentrantReadWriteLock rrwl = new ReentrantReadWriteLock(true);
+		wLock = rrwl.writeLock();
+		rLock = rrwl.readLock();
+	}
 
-    public void put(byte[] domain, byte[] username, byte[] password) throws PasswordManagerException {
+	public void put(byte[] domain, byte[] username, byte[] password)
+			throws InvalidDomainException, InvalidUsernameException, InvalidPasswordException {
+		wLock.lock();
+		try {
+			Triplet t = getTriplet(domain, username);
+			if (t == null) {
+				store.add(new Triplet(domain, username, password));
+			} else {
+				t.setPassword(password);
+			}
+		} catch (InvalidDomainException | InvalidUsernameException | InvalidPasswordException e) {
+			throw e;
+		} finally {
+			wLock.unlock();
+		}
+	}
 
-        PasswordManagerException possibleException = null;
-        wLock.lock();
+	public byte[] get(byte[] domain, byte[] username)
+			throws InvalidDomainException, InvalidUsernameException, UnknownUsernameDomainException {
+		rLock.lock();
+		try {
+			Triplet t = getTriplet(domain, username);
+			if (t == null) {
+				throw new UnknownUsernameDomainException();
+			}
+			return t.getPassword();
+		} catch (InvalidDomainException | InvalidUsernameException | UnknownUsernameDomainException e) {
+			throw e;
+		} finally {
+			rLock.unlock();
+		}
+	}
 
-        try {
-            Triplet t = getTriplet(domain, username);
-            if (t == null) {
-                store.add(new Triplet(domain, username, password));
-            } else {
-                t.setPassword(password);
-            }
+	private Triplet getTriplet(byte[] domain, byte[] username) throws InvalidDomainException, InvalidUsernameException {
+		return getTriplet(new TripletHeader(domain, username));
+	}
 
-        } catch (PasswordManagerException e) {
-            possibleException = e;
-        
-        } finally {
-            wLock.unlock();
-        }
-
-        if (possibleException != null) {
-            throw possibleException;
-        }
-    }
-
-    public byte[] get(byte[] domain, byte[] username) throws PasswordManagerException {
-        PasswordManagerException possibleException = null;
-        
-        rLock.lock();
-        byte[] passwd = null;
-        try {
-        
-            Triplet t = getTriplet(domain, username);
-            if (t != null) {
-                passwd = t.getPassword();
-            }
-            
-        } catch (PasswordManagerException e) {
-            possibleException = e;
-            
-        } finally {
-            rLock.unlock();
-        }
-        
-        if(possibleException != null){
-            throw possibleException;
-        }
-        
-        if (passwd == null) {
-            throw new UnknownUsernameDomainException();
-        }
-        return passwd;
-    }
-
-    private Triplet getTriplet(byte[] domain, byte[] username) throws InvalidDomainException, InvalidUsernameException {
-        return getTriplet(new TripletHeader(domain, username));
-    }
-
-    private Triplet getTriplet(TripletHeader th) {
-        //Looks for Triplet header similar to th
-        for (Triplet t : store) {
-            if (t.equals(th)) {
-                return t;
-            }
-        }
-        return null;
-    }
+	private Triplet getTriplet(TripletHeader th) {
+		// Looks for Triplet header similar to th
+		for (Triplet t : store) {
+			if (t.equals(th)) {
+				return t;
+			}
+		}
+		return null;
+	}
 }

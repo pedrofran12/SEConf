@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "UnknownUsernameDomainException", propOrder = {
     "message"
 })
-public class UnknownUsernameDomainException extends PasswordManagerException {
+public class UnknownUsernameDomainException extends Exception {
 
     private static final long serialVersionUID = 1L;
 

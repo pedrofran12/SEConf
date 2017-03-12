@@ -32,14 +32,16 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 		daemonSaveState();
 	}
 
-	public void put(Key publicKey, byte[] domain, byte[] username, byte[] password) throws PasswordManagerException  {
+	public void put(Key publicKey, byte[] domain, byte[] username, byte[] password)
+			throws InvalidKeyException, InvalidDomainException, InvalidUsernameException, InvalidPasswordException {
 		java.security.Key key = keyToKey(publicKey);
 		TripletStore ts = getTripletStore(key);
 		ts.put(domain, username, password);
 		daemonSaveState();
 	}
 
-	public byte[] get(Key publicKey, byte[] domain, byte[] username) throws PasswordManagerException  {
+	public byte[] get(Key publicKey, byte[] domain, byte[] username) throws InvalidKeyException, InvalidDomainException,
+			InvalidUsernameException, UnknownUsernameDomainException {
 		java.security.Key key = keyToKey(publicKey);
 		if (!password.containsKey(key)) {
 			throw new InvalidKeyException();
@@ -47,7 +49,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 		return password.get(key).get(domain, username);
 	}
 
-	private TripletStore getTripletStore(java.security.Key k) throws InvalidKeyException  {
+	private TripletStore getTripletStore(java.security.Key k) throws InvalidKeyException {
 		TripletStore ts = password.get(k);
 		if (ts == null)
 			throw new InvalidKeyException();

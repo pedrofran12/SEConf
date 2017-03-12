@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "InvalidUsernameException", propOrder = {
     "message"
 })
-public class InvalidUsernameException extends PasswordManagerException {
+public class InvalidUsernameException extends Exception {
 
     private static final long serialVersionUID = 1L;
 

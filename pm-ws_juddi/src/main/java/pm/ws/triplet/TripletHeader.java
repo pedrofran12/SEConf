@@ -6,13 +6,11 @@ import pm.exception.*;
 
 public class TripletHeader implements Serializable {
 	private static final long serialVersionUID = 1L;
-	
+
 	private final byte[] domain;
 	private final byte[] username;
-	
-	
-	public TripletHeader(byte[] dmn, byte[] uname) 
-	                        throws InvalidDomainException,InvalidUsernameException{
+
+	public TripletHeader(byte[] dmn, byte[] uname) throws InvalidDomainException, InvalidUsernameException {
 		if (dmn == null) {
 			throw new InvalidDomainException();
 		}
@@ -22,17 +20,16 @@ public class TripletHeader implements Serializable {
 		domain = dmn;
 		username = uname;
 	}
-	
+
 	public byte[] getDomain() {
 		return domain;
 	}
-	
+
 	public byte[] getUsername() {
 		return username;
 	}
-	
+
 	public final boolean equals(TripletHeader th) {
-		return Arrays.equals(domain, th.getDomain()) &&
-				Arrays.equals(username, th.getUsername());
+		return Arrays.equals(domain, th.getDomain()) && Arrays.equals(username, th.getUsername());
 	}
 }

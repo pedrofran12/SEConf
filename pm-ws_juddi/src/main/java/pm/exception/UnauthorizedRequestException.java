@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "UnauthorizedRequestException", propOrder = {
     "message"
 })
-public class UnauthorizedRequestException extends PasswordManagerException {
+public class UnauthorizedRequestException extends Exception {
 
     private static final long serialVersionUID = 1L;
 

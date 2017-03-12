@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "InvalidKeyException", propOrder = {
     "message"
 })
-public class InvalidKeyException extends PasswordManagerException {
+public class InvalidKeyException extends Exception {
     private static final long serialVersionUID = 1L;
 
     private static final String message = "Invalid Key used";
