@@ -101,8 +101,9 @@ public class Client_Test {
 		c.init(ks, alias, password);
 		c.register_user();
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
-		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
+		byte[] passwd = c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
 		c.close();
+		assertEquals("reborn_pwd", new String(passwd));
 	}
 
 	@Test(expected = AlreadyExistsLoggedUserException.class)
