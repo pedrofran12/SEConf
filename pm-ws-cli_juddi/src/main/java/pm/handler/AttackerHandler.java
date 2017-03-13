@@ -36,7 +36,7 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 
 	private static String TYPE_OF_ATTACK;	
 	
-	private static SOAPMessageContext oldSmc;
+	private static SOAPMessageContext oldSmc = null;
 	
 	public static void setHandler(String typeOfAttack){
 		TYPE_OF_ATTACK = typeOfAttack;
