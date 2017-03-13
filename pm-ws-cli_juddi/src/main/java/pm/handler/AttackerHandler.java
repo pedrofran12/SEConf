@@ -36,6 +36,8 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 
 	private static String TYPE_OF_ATTACK;	
 	
+	private static SOAPMessageContext oldSmc;
+	
 	public static void setHandler(String typeOfAttack){
 		TYPE_OF_ATTACK = typeOfAttack;
 	}
@@ -82,6 +84,14 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 		case "msg-change":
 			addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, "Hacked");
 			break;
+		
+	    case "replay-attack":
+	    	if(oldSmc!=null)
+	    		smc = oldSmc;
+    		else
+    			oldSmc = smc;
+			break;
+		
 		}
         return true;
     }
