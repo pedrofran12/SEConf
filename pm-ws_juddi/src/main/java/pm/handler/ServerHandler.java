@@ -107,8 +107,10 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
                 System.out.println("\nNonce: "+nonce);
                 System.out.println("Timestamp: "+ new Date(ts));
                 
-                if(!isNonceValid(nonce,ts)) //if nonce not valid returns false! (discards message)
-                    return false;
+                if(!isNonceValid(nonce,ts)) { //if nonce not valid returns false! (discards message)
+                    System.out.println(">>> Replay attack detected");
+                	return false;
+                }
 			}
 
 		} catch (Exception e) {
