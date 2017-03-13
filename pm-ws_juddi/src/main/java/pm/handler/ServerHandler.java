@@ -291,7 +291,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
         if(!compareTime(time,nTs,NONCE_TIMEOUT)){
             return false;
         } 
-        else if (nonceMap.containsKey(nonce) && (nonceMap.get(nonce) == nTs) ) {
+        else if (nonceMap.containsKey(nonce)) {
             return false;
         }
         else{
