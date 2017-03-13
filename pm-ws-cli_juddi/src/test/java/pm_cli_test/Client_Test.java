@@ -1,6 +1,7 @@
 package pm_cli_test;
 
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
+import static org.junit.Assert.assertEquals;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
