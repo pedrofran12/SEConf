@@ -87,7 +87,7 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 		
 	    case "replay-attack":
 	    	if(oldSmc!=null)
-	    		smc = oldSmc;
+	    		smc.setMessage(oldSmc.getMessage());
     		else
     			oldSmc = smc;
 			break;
