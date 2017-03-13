@@ -3,8 +3,10 @@ package pm.cli;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
+import java.nio.ByteBuffer;
 import java.security.Key;
 import java.security.KeyStore;
+import java.util.Arrays;
 
 import pm.exception.cli.AlreadyExistsLoggedUserException;
 import pm.exception.cli.ClientException;
@@ -65,7 +67,8 @@ public class ClientLib {
 			throw new InvalidPasswordException();
 		byte[] hashedDomain = hash(domain);
 		byte[] hashedUsername = hash(domain, username);
-		byte[] cipheredPassword = cipher(password);
+		byte[] hashedPassword = passwordHash(password);
+		byte[] cipheredPassword = cipher(hashedPassword);
 		_pm.put(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword);
 	}
 
@@ -81,8 +84,11 @@ public class ClientLib {
 		byte[] hashedDomain = hash(domain);
 		byte[] hashedUsername = hash(domain, username);
 		byte[] passwordCiphered = _pm.get(getPublicKey(), hashedDomain, hashedUsername);
-		byte[] password = decipher(passwordCiphered);
-
+		byte[] hashedPassword = decipher(passwordCiphered);
+		byte[] password = Arrays.copyOfRange(hashedPassword, 256/Byte.SIZE, hashedPassword.length);
+		if (!Arrays.equals(passwordHash(password), hashedPassword)) {
+			throw new InvalidPasswordException();
+		}
 		return password;
 	}
 
@@ -171,6 +177,13 @@ public class ClientLib {
 			System.out.println("Exception: " + e.getMessage());
 		}
 		return hash;
+	}
+	
+	private byte[] passwordHash(byte[] password) throws InvalidKeyStoreException {
+		ByteBuffer bb = ByteBuffer.allocate(password.length + 256/Byte.SIZE);
+		bb.put(hash(password));
+		bb.put(password);
+		return bb.array();
 	}
 
 	private void setKeyStore(KeyStore k) {
