@@ -67,7 +67,7 @@ public class ClientLib {
 			throw new InvalidPasswordException();
 		byte[] hashedDomain = hash(domain);
 		byte[] hashedUsername = hash(domain, username);
-		byte[] hashedPassword = passwordHash(password);
+		byte[] hashedPassword = passwordHash(password, domain, username);
 		byte[] cipheredPassword = cipher(hashedPassword);
 		_pm.put(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword);
 	}
@@ -86,7 +86,7 @@ public class ClientLib {
 		byte[] passwordCiphered = _pm.get(getPublicKey(), hashedDomain, hashedUsername);
 		byte[] hashedPassword = decipher(passwordCiphered);
 		byte[] password = Arrays.copyOfRange(hashedPassword, 256/Byte.SIZE, hashedPassword.length);
-		if (!Arrays.equals(passwordHash(password), hashedPassword)) {
+		if (!Arrays.equals(passwordHash(password, domain, username), hashedPassword)) {
 			throw new InvalidPasswordException();
 		}
 		return password;
@@ -179,9 +179,9 @@ public class ClientLib {
 		return hash;
 	}
 	
-	private byte[] passwordHash(byte[] password) throws InvalidKeyStoreException {
+	private byte[] passwordHash(byte[] password, byte[] domain, byte[] username) throws InvalidKeyStoreException {
 		ByteBuffer bb = ByteBuffer.allocate(password.length + 256/Byte.SIZE);
-		bb.put(hash(password));
+		bb.put(hash(password, domain, username));
 		bb.put(password);
 		return bb.array();
 	}
