@@ -2,6 +2,7 @@ package pm.handler;
 
 import java.io.ByteArrayOutputStream;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -22,6 +23,7 @@ import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
 import org.w3c.dom.NodeList;
 
+
 @HandlerChain(file = "/handler-chain.xml")
 public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 
@@ -34,7 +36,7 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
     public static final String HEADER_TIMESTAMP = "timestamp";
     public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
 
-	private static String TYPE_OF_ATTACK;	
+	private static String TYPE_OF_ATTACK = "";	
 	
 	private static SOAPMessageContext oldSmc = null;
 	
@@ -44,55 +46,72 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 
 	@Override
     public boolean handleMessage(SOAPMessageContext smc) {
-		switch (TYPE_OF_ATTACK) {
-		case "dsign-remove":
-			// Remove from Header old DSIGN components
-			try {
-	        	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
-	        	NodeList nl = header.getChildNodes();
-	        	for (int i = 0; i < nl.getLength(); i++) {
-	        	    if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN)) {
-	        	        header.removeChild(nl.item(i));
-	        	    }
-	        	}
-	        	header.normalize();
-        	} catch (SOAPException e) {
-				e.printStackTrace();
-			}
-			break;
-		case "dsign-change":
-			byte[] sig = parseHexBinary(getHeaderElement(smc, HEADER_DSIGN, HEADER_DSIGN_NS));
-			sig[0] = (byte) (sig[0] + 1);
-            
-			// Remove from Header old DSIGN components
-			try {
-	        	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
-	        	NodeList nl = header.getChildNodes();
-	        	for (int i = 0; i < nl.getLength(); i++) {
-	        	    if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN)) {
-	        	        header.removeChild(nl.item(i));
-	        	    }
-	        	}
-	        	header.normalize();
-        	} catch (SOAPException e) {
-				e.printStackTrace();
-			}
-
+		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
+		String operation = smc.get(MessageContext.WSDL_OPERATION).toString();
+		
+		if(outbound==true){
+			switch (TYPE_OF_ATTACK) {
+			case "dsign-remove":
+				// Remove from Header old DSIGN components
+				try {
+		        	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
+		        	NodeList nl = header.getChildNodes();
+		        	for (int i = 0; i < nl.getLength(); i++) {
+		        	    if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN)) {
+		        	        header.removeChild(nl.item(i));
+		        	    }
+		        	}
+		        	header.normalize();
+	        	} catch (SOAPException e) {
+					e.printStackTrace();
+				}
+				break;
+			case "dsign-change":
+				byte[] sig = parseHexBinary(getHeaderElement(smc, HEADER_DSIGN, HEADER_DSIGN_NS));
+				sig[0] = (byte) (sig[0] + 1);
+	            
+				// Remove from Header old DSIGN components
+				try {
+		        	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
+		        	NodeList nl = header.getChildNodes();
+		        	for (int i = 0; i < nl.getLength(); i++) {
+		        	    if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN)) {
+		        	        header.removeChild(nl.item(i));
+		        	    }
+		        	}
+		        	header.normalize();
+	        	} catch (SOAPException e) {
+					e.printStackTrace();
+				}
+	
+				
+				addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(sig));
+				break;
+			case "msg-change":
+				addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, "Hacked");
+				break;
 			
-			addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(sig));
-			break;
-		case "msg-change":
-			addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, "Hacked");
-			break;
-		
-	    case "replay-attack":
-	    	if(oldSmc!=null)
-	    		smc.setMessage(oldSmc.getMessage());
-    		else
-    			oldSmc = smc;
-			break;
-		
+		    case "replay-attack":
+		    	if(oldSmc!=null)
+		    		smc.setMessage(oldSmc.getMessage());
+	    		else
+	    			oldSmc = smc;
+				break;
+			
+			}
 		}
+		//REQUESTS ARE SENT FROM SERVER TO CLIENT
+		else{
+			if(operation.contains("get") && TYPE_OF_ATTACK.equals("password-change")){
+				System.out.println("»»»»»»»»»»»»»»»»»»»»»");
+				System.out.println(getMessage(smc));
+				setBodyElement(smc, "return");
+				System.out.println(getMessage(smc));
+				System.out.println("»»»»»»»»»»»»»»»»»»»»»");
+			}
+				
+		}
+			
         return true;
     }
 
@@ -242,4 +261,35 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
             return ts.getTime();
         }
     }
+    
+    
+	private void setBodyElement(SOAPMessageContext smc, String tag) {
+		try {
+			// get SOAP envelope header
+			SOAPMessage msg = smc.getMessage();
+			SOAPPart sp = msg.getSOAPPart();
+			SOAPEnvelope se = sp.getEnvelope();
+			SOAPBody sh = se.getBody();
+			findAttributeRecursive(sh, tag);
+		} catch (Exception e) {
+			System.out.println("Erro getHeaderElement");
+		}
+	}
+
+	private void findAttributeRecursive(SOAPElement element, String tag) {
+		NodeList nl = element.getChildNodes();
+		for (int i = 0; i < nl.getLength(); i++) {
+			if (nl.item(i).getNodeType() == Node.ELEMENT_NODE) {
+				SOAPElement se = (SOAPElement) nl.item(i);
+				if (se.getNodeName().equals(tag)) {
+					String passwordEncoded = se.getValue();
+					byte[] passwordCiphered = Base64.getDecoder().decode(passwordEncoded.getBytes());
+					passwordCiphered[0] = (byte) (passwordCiphered[0] + 1);
+					se.setValue(Base64.getEncoder().encodeToString(passwordCiphered));
+					return;
+				}
+				findAttributeRecursive(se, tag);
+			}
+		}
+	}
 }

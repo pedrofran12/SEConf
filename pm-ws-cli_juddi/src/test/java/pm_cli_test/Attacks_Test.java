@@ -1,6 +1,7 @@
 package pm_cli_test;
 
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
+import static org.junit.Assert.assertEquals;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -11,9 +12,15 @@ import javax.xml.registry.JAXRException;
 import javax.xml.ws.BindingProvider;
 
 import org.junit.*;
+import static org.junit.Assert.*;
+
 
 import pm.cli.ClientLib;
+import pm.exception.cli.ClientException;
+import pm.exception.cli.InvalidPasswordException;
 import pm.handler.AttackerHandler;
+import pm.ws.InvalidKeyException_Exception;
+import pm.ws.KeyAlreadyExistsException_Exception;
 import pm.ws.PasswordManager;
 import pm.ws.PasswordManagerImplService;
 
@@ -29,7 +36,7 @@ public class Attacks_Test {
 
 	
 	@BeforeClass
-	public static void oneTimeSetUp() throws JAXRException {
+	public static void oneTimeSetUp() throws JAXRException, ClientException, InvalidKeyException_Exception, KeyAlreadyExistsException_Exception {
 		// ********** Connection to Server ********** //
 		String url = "http://localhost:8080/pm-ws/endpoint";
 		String name = "pm-ws";
@@ -45,10 +52,12 @@ public class Attacks_Test {
 		// ****************************
 		
 		c = new ClientLib(port);
+		c.init(getKeyStore("KeyStore-adolfo", "adolfo".toCharArray()), "client", "adolfo".toCharArray());
+		c.register_user();
 
 	}
 
-	public KeyStore getKeyStore(String fileName, char[] passwd) {
+	public static KeyStore getKeyStore(String fileName, char[] passwd) {
 		KeyStore k = null;
 		try {
 			k = KeyStore.getInstance("JKS");
@@ -62,11 +71,6 @@ public class Attacks_Test {
 		return k;
 	}
 
-	@After
-	public void afterTest() {
-		c.close();
-	}
-
 	@AfterClass
 	public static void oneTimeTearDown() {
 		c.close();
@@ -78,52 +82,39 @@ public class Attacks_Test {
 	@Test(expected = Exception.class)
 	public void testClient_dsign_remove() throws Exception {
 		AttackerHandler.setHandler("dsign-remove");
-		char[] password = "seconf".toCharArray();
-		KeyStore ks = getKeyStore("KeyStore-seconf", password);
-
-		c.init(ks, alias, password);
-		c.register_user();
+		
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
 		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
-		c.close();
 	}
 	
 	@Test(expected = Exception.class)
 	public void testClient_dsign_change() throws Exception {
 		AttackerHandler.setHandler("dsign-change");
-		char[] password = "seconf".toCharArray();
-		KeyStore ks = getKeyStore("KeyStore-seconf", password);
 
-		c.init(ks, alias, password);
-		c.register_user();
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
 		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
-		c.close();
 	}
 	
 	@Test(expected = Exception.class)
 	public void testClient_msg_change() throws Exception {
 		AttackerHandler.setHandler("msg-change");
-		char[] password = "seconf".toCharArray();
-		KeyStore ks = getKeyStore("KeyStore-seconf", password);
-
-		c.init(ks, alias, password);
-		c.register_user();
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
 		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
-		c.close();
 	}
 	
 	@Test(expected = Exception.class)
 	public void testClient_replay_attack() throws Exception {
 		AttackerHandler.setHandler("replay-attack");
-		char[] password = "seconf".toCharArray();
-		KeyStore ks = getKeyStore("KeyStore-seconf", password);
 
-		c.init(ks, alias, password);
-		c.register_user();
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
 		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
-		c.close();
+	}
+	
+	@Test(expected= InvalidPasswordException.class)
+	public void testClient_change_response() throws Exception {
+		AttackerHandler.setHandler("password-change");
+
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
+		byte[] passwd = c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
 	}
 }

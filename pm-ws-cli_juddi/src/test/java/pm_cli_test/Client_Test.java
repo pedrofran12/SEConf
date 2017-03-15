@@ -19,6 +19,7 @@ import pm.exception.cli.ClientException;
 import pm.exception.cli.InvalidDomainException;
 import pm.exception.cli.InvalidKeyStoreException;
 import pm.exception.cli.InvalidUsernameException;
+import pm.handler.AttackerHandler;
 import pm.ws.InvalidDomainException_Exception;
 import pm.ws.InvalidKeyException_Exception;
 import pm.ws.InvalidPasswordException_Exception;
@@ -77,6 +78,7 @@ public class Client_Test {
 	@After
 	public void afterTest() {
 		c.close();
+		AttackerHandler.setHandler("");
 	}
 
 	@AfterClass
