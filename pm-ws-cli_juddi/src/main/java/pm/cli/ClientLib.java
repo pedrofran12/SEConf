@@ -84,9 +84,14 @@ public class ClientLib {
 		byte[] hashedDomain = hash(domain);
 		byte[] hashedUsername = hash(domain, username);
 		byte[] passwordCiphered = _pm.get(getPublicKey(), hashedDomain, hashedUsername);
-		byte[] hashedPassword = decipher(passwordCiphered);
-		byte[] password = Arrays.copyOfRange(hashedPassword, 256/Byte.SIZE, hashedPassword.length);
-		if (!Arrays.equals(passwordHash(password), hashedPassword)) {
+		byte[] password;
+		try{
+			byte[] hashedPassword = decipher(passwordCiphered);
+			password = Arrays.copyOfRange(hashedPassword, 256/Byte.SIZE, hashedPassword.length);
+			if (!Arrays.equals(passwordHash(password), hashedPassword)) {
+				throw new InvalidPasswordException();
+			}
+		}catch(Exception e){
 			throw new InvalidPasswordException();
 		}
 		return password;
