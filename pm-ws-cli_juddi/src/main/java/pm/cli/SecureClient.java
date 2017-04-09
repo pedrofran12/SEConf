@@ -8,14 +8,17 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.util.Arrays;
 
 import javax.crypto.Cipher;
+import javax.crypto.Mac;
 
 public class SecureClient {
 	
 	public static final String CIPHER_ALGORITHM = "RSA";
 	public static final String HASH_ALGORITHM = "SHA-256";
 	private static final String DIGITAL_SIGNATURE = "SHA256withRSA";
+	private static final String MAC = "HmacSHA256";
 
 
 	
@@ -102,4 +105,22 @@ public class SecureClient {
 		return cipher.verify(cipherDigest);
 	}
 	
+	
+	/*************************************
+	 * MESSAGE AUTHENTICATION CODES (MACS)
+	 *************************************/
+    public static byte[] makeMAC(Key k, byte[] bytes) throws Exception {
+    	Mac authenticator = Mac.getInstance(MAC);
+    	authenticator.init(k);
+        byte[] msgAuthenticator = authenticator.doFinal(bytes);
+        return msgAuthenticator;
+    }
+
+    public static boolean verifyMAC(Key k, byte[] cipherDigest,
+    								byte[] bytes) throws Exception {
+    	Mac authenticator = Mac.getInstance(MAC);
+    	authenticator.init(k);
+        byte[] msgAuthenticator = authenticator.doFinal(bytes);
+        return Arrays.equals(cipherDigest, msgAuthenticator);
+    }
 }
