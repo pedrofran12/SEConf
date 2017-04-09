@@ -1,6 +1,8 @@
 package pm.ws;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,11 +13,16 @@ import pm.exception.*;
 import pm.ws.triplet.TripletStore;
 import utilities.ObjectUtil;
 
+import org.apache.commons.net.util.Base64;
+import org.apache.log4j.Logger;
+
+
 @WebService(endpointInterface = "pm.ws.PasswordManager")
 @HandlerChain(file = "/handler-chain.xml")
 public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final String SAVE_STATE_NAME = "./PasswordManager.serial";
+	private static Logger log = Logger.getLogger(PasswordManagerImpl.class.getName());
 
 	private final Map<java.security.Key, TripletStore> password;
 
@@ -25,6 +32,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 
 	public void register(Key publicKey) throws InvalidKeyException, KeyAlreadyExistsException {
 		java.security.Key key = keyToKey(publicKey);
+		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : register(" + Base64.encodeBase64String(key.getEncoded()) + ")");
 		if (password.containsKey(key)) {
 			throw new KeyAlreadyExistsException();
 		}
@@ -35,6 +43,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	public void put(Key publicKey, byte[] domain, byte[] username, byte[] password)
 			throws InvalidKeyException, InvalidDomainException, InvalidUsernameException, InvalidPasswordException {
 		java.security.Key key = keyToKey(publicKey);
+		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : put(" + Base64.encodeBase64String(key.getEncoded()) + ", " + Base64.encodeBase64String(domain) + ", " + Base64.encodeBase64String(username) + ", " + Base64.encodeBase64String(password) + ")");
 		TripletStore ts = getTripletStore(key);
 		ts.put(domain, username, password);
 		daemonSaveState();
@@ -43,6 +52,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	public byte[] get(Key publicKey, byte[] domain, byte[] username) throws InvalidKeyException, InvalidDomainException,
 			InvalidUsernameException, UnknownUsernameDomainException {
 		java.security.Key key = keyToKey(publicKey);
+		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : get(" + Base64.encodeBase64String(key.getEncoded()) + ", " + Base64.encodeBase64String(domain) + ", " + Base64.encodeBase64String(username) + ")");
 		if (!password.containsKey(key)) {
 			throw new InvalidKeyException();
 		}
