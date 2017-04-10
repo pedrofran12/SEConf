@@ -6,15 +6,22 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Resource;
+import javax.crypto.SecretKey;
 import javax.jws.HandlerChain;
 import javax.jws.WebService;
+import javax.xml.ws.WebServiceContext;
+import javax.xml.ws.handler.MessageContext;
 
 import pm.exception.*;
+import pm.handler.ServerHandler;
 import pm.ws.triplet.TripletStore;
 import utilities.ObjectUtil;
 
 import org.apache.commons.net.util.Base64;
 import org.apache.log4j.Logger;
+
+import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 
 @WebService(endpointInterface = "pm.ws.PasswordManager")

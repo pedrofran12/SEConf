@@ -19,7 +19,7 @@ public class SecureServer{
 	public static final String CIPHER_ALGORITHM = "RSA";
 	public static final String HASH_ALGORITHM = "SHA-256";
 	private static final String DIGITAL_SIGNATURE = "SHA256withRSA";
-	private static final String MAC = "HmacSHA256";
+	public static final String MAC = "HmacSHA256";
 
 
 	
@@ -37,19 +37,20 @@ public class SecureServer{
 	
 	public static byte[] decipher(KeyStore ks, String alias, char[] password, byte[] cipheredMessage) throws Exception{
 		PrivateKey key = getPrivateKey(ks, alias, password);
-		
-	    byte[] dectyptedText = null;
-	    // get an RSA cipher object and print the provider
+	    return decipher(key, cipheredMessage);
+	}
+	
+	public static byte[] decipher(PrivateKey key, byte[] cipheredMessage) throws Exception{
+		// get an RSA cipher object and print the provider
 	    final Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
 
 	    // decrypt the text using the private key
 	    cipher.init(Cipher.DECRYPT_MODE, key);
-	    dectyptedText = cipher.doFinal(cipheredMessage);
-
+	    byte[] dectyptedText = cipher.doFinal(cipheredMessage);
 	    return dectyptedText;
 	}
-
-    public static byte[] hash(byte[] data) throws NoSuchAlgorithmException {
+    
+	public static byte[] hash(byte[] data) throws NoSuchAlgorithmException {
     	MessageDigest md = MessageDigest.getInstance(HASH_ALGORITHM);
         md.update(data);
         return md.digest();

@@ -11,21 +11,26 @@ import java.security.cert.Certificate;
 import java.util.Arrays;
 
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
+import javax.crypto.SecretKey;
 
 public class SecureClient {
 	
 	public static final String CIPHER_ALGORITHM = "RSA";
 	public static final String HASH_ALGORITHM = "SHA-256";
 	private static final String DIGITAL_SIGNATURE = "SHA256withRSA";
-	private static final String MAC = "HmacSHA256";
+	public static final String MAC = "HmacSHA256";
 
 
 	
 	public static byte[] cipher(KeyStore ks, String alias, char[] password, byte[] plainTextMessage) throws Exception{
 		PublicKey key = getPublicKey(ks, alias, password);
+	    return cipher(key, plainTextMessage);
+	}
 
-	    // get an RSA cipher object and print the provider
+	public static byte[] cipher(PublicKey key, byte[] plainTextMessage) throws Exception {
+		// get an RSA cipher object and print the provider
 	    final Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
 	    // encrypt the plain text using the public key
 	    cipher.init(Cipher.ENCRYPT_MODE, key);
@@ -122,5 +127,10 @@ public class SecureClient {
     	authenticator.init(k);
         byte[] msgAuthenticator = authenticator.doFinal(bytes);
         return Arrays.equals(cipherDigest, msgAuthenticator);
+    }
+    
+    public static SecretKey generateMacKey() throws Exception{
+    	KeyGenerator keygen = KeyGenerator.getInstance(MAC);
+    	return keygen.generateKey();
     }
 }
