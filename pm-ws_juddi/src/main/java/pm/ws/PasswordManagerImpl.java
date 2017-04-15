@@ -19,6 +19,7 @@ import pm.ws.triplet.TripletStore;
 import utilities.ObjectUtil;
 
 import org.apache.commons.net.util.Base64;
+import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
@@ -29,7 +30,7 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final String SAVE_STATE_NAME = "./PasswordManager.serial";
-	private static Logger log = Logger.getLogger(PasswordManagerImpl.class.getName());
+	private transient Logger log;
 
 	private final Map<java.security.Key, TripletStore> password;
 
@@ -96,13 +97,20 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	}
 
 	public static PasswordManager getInstance() {
-		PasswordManager pm = ObjectUtil.readObjectFile(SAVE_STATE_NAME, PasswordManagerImpl.class);
+		PasswordManagerImpl pm = ObjectUtil.readObjectFile(SAVE_STATE_NAME, PasswordManagerImpl.class);
 		if (pm != null) {
 			System.out.println(">>> Loaded state");
 		} else {
 			pm = new PasswordManagerImpl();
 			System.out.println(">>> Created");
 		}
+		pm.setLogger("0");
 		return pm;
+	}
+	
+	private void setLogger(String port) {
+		//Set logger filename
+		System.setProperty("file.port", port);
+		log = Logger.getLogger(PasswordManagerImpl.class.getName() + port);
 	}
 }
