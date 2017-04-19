@@ -132,31 +132,32 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	}
 	
 	private void log(String methodName, byte[] result, java.security.Key key, byte[]... args){
-		String argsString = "(" + Base64.encodeBase64String(key.getEncoded());
-
-		for(byte[] b : args)
-			argsString += ", " + Base64.encodeBase64String(b);
-		argsString += ")";
+		String toPrint = logToString(methodName, key, args);
 		String resultString = Base64.encodeBase64String(result);
-		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : " + methodName + argsString + " -> " + resultString);
+		log(toPrint + " -> " + resultString);
 	}
 	
 	private void log(String methodName, java.security.Key key, byte[]... args){
-		String argsString = "(" + Base64.encodeBase64String(key.getEncoded());
-
-		for(byte[] b : args)
-			argsString += ", " + Base64.encodeBase64String(b);
-		argsString += ")";
-		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : " + methodName + argsString);
+		String toPrint = logToString(methodName, key, args);
+		log(toPrint);
 	}
 
 	private void log(String methodName, Exception e, java.security.Key key, byte[]... args){
-		String argsString = "(" + Base64.encodeBase64String(key.getEncoded());
+		String toPrint = logToString(methodName, key, args) + " -> " + e.getClass().getSimpleName();
+		log(toPrint);
+	}
+	
+	private void log(String toPrint){
+		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : " + toPrint);
+	}
+
+	private String logToString(String methodName, java.security.Key key, byte[]... args){
+		String logPrint = methodName + "(" + Base64.encodeBase64String(key.getEncoded());
 
 		for(byte[] b : args)
-			argsString += ", " + Base64.encodeBase64String(b);
-		argsString += ")";
-		log.warn(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : " + methodName + argsString + " -> " + e.getClass().getSimpleName());
+			logPrint += ", " + Base64.encodeBase64String(b);
+		logPrint += ")";
+		return  logPrint;
 	}
 
 }
