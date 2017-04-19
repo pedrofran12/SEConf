@@ -34,31 +34,52 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 
 	public void register(Key publicKey) throws InvalidKeyException, KeyAlreadyExistsException {
 		java.security.Key key = keyToKey(publicKey);
-		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : register(" + Base64.encodeBase64String(key.getEncoded()) + ")");
-		if (password.containsKey(key)) {
-			throw new KeyAlreadyExistsException();
+		try {
+			if (password.containsKey(key)) {
+				throw new KeyAlreadyExistsException();
+			}
+			password.put(key, new TripletStore());
+			daemonSaveState();
+			log("register", key);
+
 		}
-		password.put(key, new TripletStore());
-		daemonSaveState();
+		catch (Exception e) {
+			log("register", e, key);
+			throw e;
+		}
+
 	}
 
 	public void put(Key publicKey, byte[] domain, byte[] username, byte[] password)
 			throws InvalidKeyException, InvalidDomainException, InvalidUsernameException, InvalidPasswordException {
 		java.security.Key key = keyToKey(publicKey);
-		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : put(" + Base64.encodeBase64String(key.getEncoded()) + ", " + Base64.encodeBase64String(domain) + ", " + Base64.encodeBase64String(username) + ", " + Base64.encodeBase64String(password) + ")");
-		TripletStore ts = getTripletStore(key);
-		ts.put(domain, username, password);
-		daemonSaveState();
+		try{
+			TripletStore ts = getTripletStore(key);
+			ts.put(domain, username, password);
+			daemonSaveState();
+			log("put", key, domain, username, password);	
+		}
+		catch (Exception e) {
+			log("put", e, key, domain, username, password);
+			throw e;
+		}
 	}
 
 	public byte[] get(Key publicKey, byte[] domain, byte[] username) throws InvalidKeyException, InvalidDomainException,
 			InvalidUsernameException, UnknownUsernameDomainException {
 		java.security.Key key = keyToKey(publicKey);
-		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : get(" + Base64.encodeBase64String(key.getEncoded()) + ", " + Base64.encodeBase64String(domain) + ", " + Base64.encodeBase64String(username) + ")");
-		if (!password.containsKey(key)) {
-			throw new InvalidKeyException();
+		try{
+			if (!password.containsKey(key)) {
+				throw new InvalidKeyException();
+			}
+			byte[] result = password.get(key).get(domain, username);
+			log("get", result, key, domain, username, result);
+			return result;
 		}
-		return password.get(key).get(domain, username);
+		catch (Exception e) {
+			log("get", e, key, domain, username);
+			throw e;
+		}
 	}
 
 	private TripletStore getTripletStore(java.security.Key k) throws InvalidKeyException {
@@ -109,4 +130,33 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 		//set privatekey
 		ServerHandler.setPrivateKey(port);
 	}
+	
+	private void log(String methodName, byte[] result, java.security.Key key, byte[]... args){
+		String argsString = "(" + Base64.encodeBase64String(key.getEncoded());
+
+		for(byte[] b : args)
+			argsString += ", " + Base64.encodeBase64String(b);
+		argsString += ")";
+		String resultString = Base64.encodeBase64String(result);
+		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : " + methodName + argsString + " -> " + resultString);
+	}
+	
+	private void log(String methodName, java.security.Key key, byte[]... args){
+		String argsString = "(" + Base64.encodeBase64String(key.getEncoded());
+
+		for(byte[] b : args)
+			argsString += ", " + Base64.encodeBase64String(b);
+		argsString += ")";
+		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : " + methodName + argsString);
+	}
+
+	private void log(String methodName, Exception e, java.security.Key key, byte[]... args){
+		String argsString = "(" + Base64.encodeBase64String(key.getEncoded());
+
+		for(byte[] b : args)
+			argsString += ", " + Base64.encodeBase64String(b);
+		argsString += ")";
+		log.warn(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : " + methodName + argsString + " -> " + e.getClass().getSimpleName());
+	}
+
 }
