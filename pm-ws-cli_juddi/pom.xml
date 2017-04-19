@@ -95,6 +95,21 @@
             <artifactId>commons-net</artifactId>
             <version>3.4</version>
         </dependency>
+        <dependency>
+	   		<groupId>org.apache.maven</groupId>
+	    	<artifactId>maven-model</artifactId>
+			<version>3.5.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.codehaus.plexus</groupId>
+		    <artifactId>plexus-utils</artifactId>
+		    <version>3.0.24</version>
+		</dependency>
+        <dependency>
+		    <groupId>org.apache.maven</groupId>
+		    <artifactId>maven-core</artifactId>
+		    <version>3.5.0</version>
+		</dependency>
 	</dependencies>
 	
 	<properties>
@@ -103,11 +118,13 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target><!-- WSDL is required 
 			for client code generation -->
-		<ws.url>http://localhost:8080/pm-ws/endpoint</ws.url>
-		<wsdl.url>${ws.url}?WSDL</wsdl.url>
+		<ws.firstport>8080</ws.firstport>
+		<ws.url>http://localhost:%d/pm-ws/endpoint</ws.url>
+		<wsdl.url>http://localhost:${ws.firstport}/pm-ws/endpoint?WSDL</wsdl.url>
 		<mainclass>pm.cli.Client</mainclass>
 		<uddi.url>http://localhost:9090</uddi.url>
-		<ws.name>pm-ws</ws.name>
+		<ws.name>pm-ws-%d</ws.name>
+		<ws.number.faults>1</ws.number.faults>
 	</properties>
 	<build>
 		<plugins>
@@ -152,6 +169,7 @@
 					<arguments>
 						<argument>${uddi.url}</argument>
 						<argument>${ws.name}</argument>
+						<argument>${ws.number.faults}</argument>
 					</arguments>
 				</configuration>
 			</plugin>

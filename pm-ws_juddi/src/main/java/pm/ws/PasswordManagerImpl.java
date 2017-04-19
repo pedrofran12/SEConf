@@ -6,11 +6,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Resource;
 import javax.jws.HandlerChain;
 import javax.jws.WebService;
+import javax.xml.ws.WebServiceContext;
+import javax.xml.ws.handler.MessageContext;
 
 import pm.exception.*;
 import pm.handler.ServerHandler;
+import pm.ws.triplet.Triplet;
 import pm.ws.triplet.TripletStore;
 import utilities.ObjectUtil;
 
@@ -23,13 +27,18 @@ import org.apache.log4j.Logger;
 @HandlerChain(file = "/handler-chain.xml")
 public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private static final long serialVersionUID = 1L;
-	private static final String SAVE_STATE_NAME = "./PasswordManager.serial";
-	private transient Logger log;
+	private static final String SAVE_STATE_NAME = "./PasswordManager%d.serial";
 
+	private transient Logger log;
+	private int port;
 	private final Map<java.security.Key, TripletStore> password;
 	
-	private PasswordManagerImpl() {
+	@Resource
+	private transient WebServiceContext webServiceContext;
+	
+	private PasswordManagerImpl(int port) {
 		password = new HashMap<>();
+		this.port = port;
 	}
 
 	public void register(Key publicKey) throws InvalidKeyException, KeyAlreadyExistsException {
@@ -55,7 +64,12 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 		java.security.Key key = keyToKey(publicKey);
 		try{
 			TripletStore ts = getTripletStore(key);
-			ts.put(domain, username, password);
+
+			MessageContext messageContext = webServiceContext.getMessageContext();
+			int wid = (int) messageContext.get(ServerHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY);
+			System.out.printf("PUT() got token '%s' from response context%n", wid);
+			
+			ts.put(domain, username, password, wid);
 			daemonSaveState();
 			log("put", key, domain, username, password);	
 		}
@@ -69,10 +83,15 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 			InvalidUsernameException, UnknownUsernameDomainException {
 		java.security.Key key = keyToKey(publicKey);
 		try{
-			if (!password.containsKey(key)) {
-				throw new InvalidKeyException();
-			}
-			byte[] result = password.get(key).get(domain, username);
+			TripletStore ts = getTripletStore(key);
+			Triplet t = ts.get(domain, username);
+			
+			int wid = t.getWriteId();
+			System.out.printf("GET() put token '%d' on request context%n", wid);
+			MessageContext messageContext = webServiceContext.getMessageContext();
+			messageContext.put(ServerHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY, wid);
+
+			byte[] result = t.getPassword();
 			log("get", result, key, domain, username, result);
 			return result;
 		}
@@ -103,7 +122,8 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	}
 
 	private synchronized void saveState() {
-		boolean saved = ObjectUtil.writeObjectFile(SAVE_STATE_NAME, this);
+		String fileName = String.format(SAVE_STATE_NAME, port);
+		boolean saved = ObjectUtil.writeObjectFile(fileName, this);
 		if (saved) {
 			System.out.println(">>> Saved state");
 		} else {
@@ -111,15 +131,16 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 		}
 	}
 
-	public static PasswordManager getInstance() {
-		PasswordManagerImpl pm = ObjectUtil.readObjectFile(SAVE_STATE_NAME, PasswordManagerImpl.class);
+	public static PasswordManager getInstance(int port) {
+		String fileName = String.format(SAVE_STATE_NAME, port);
+		PasswordManagerImpl pm = ObjectUtil.readObjectFile(fileName, PasswordManagerImpl.class);
 		if (pm != null) {
 			System.out.println(">>> Loaded state");
 		} else {
-			pm = new PasswordManagerImpl();
+			pm = new PasswordManagerImpl(port);
 			System.out.println(">>> Created");
 		}
-		pm.setPort("8080");
+		pm.setPort(""+port);
 		return pm;
 	}
 	

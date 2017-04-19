@@ -41,6 +41,7 @@ import org.w3c.dom.NodeList;
 
 @HandlerChain(file = "/handler-chain.xml")
 public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
+	public static final String WRITE_IDENTIFIER_RESPONSE_PROPERTY = "write.identifer.property";
 
 	public static final String HEADER_DSIGN = "dsign";
 	public static final String HEADER_DSIGN_NS = "urn:dsign";
@@ -57,8 +58,12 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
     public static final String HEADER_TIMESTAMP = "timestamp";
     public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
 
+
     public static final String MAC_KEY_REQUEST_PROPERTY = "mac.key.request.property";
 	
+    public static final String HEADER_WID = "writeid";
+    public static final String HEADER_WID_NS = "urn:writeid";
+
 	private static KeyStore _ks;
 	private static String _alias;
 	private static char[] _password;
@@ -101,6 +106,12 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
         try {
         	
             if (outbound) {
+            	// send write identifier
+            	if (operation.endsWith("put")) {
+					int wid = (int) smc.get(WRITE_IDENTIFIER_RESPONSE_PROPERTY);
+					addHeaderSM(smc, HEADER_WID,HEADER_WID_NS,""+wid);
+                }
+            	
             	// Generate MAC key for integrity purposes on the response message
             	byte[] macKey = generateMacKey();
                 addHeaderSM(smc, HEADER_MAC_KEY, HEADER_MAC_KEY_NS, printHexBinary(cipher(macKey)));
@@ -159,6 +170,13 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
             	if (!result) {
             	   return false;
             	}
+            	
+            	// receive write identifier
+            	if (operation.endsWith("get")) {
+	                int wid = Integer.parseInt(getHeaderElement(smc, HEADER_WID, HEADER_WID_NS));
+	                smc.put(WRITE_IDENTIFIER_RESPONSE_PROPERTY, wid);
+	                smc.setScope(WRITE_IDENTIFIER_RESPONSE_PROPERTY, Scope.APPLICATION);
+                }
             }
         } catch (Exception e) {
             System.out.print("Caught exception in handleMessage: ");

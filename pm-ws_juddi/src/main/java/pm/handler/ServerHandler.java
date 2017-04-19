@@ -38,6 +38,7 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 	public static final String MAC_KEY_REQUEST_PROPERTY = "mac.key.request.property";
+	public static final String WRITE_IDENTIFIER_RESPONSE_PROPERTY = "write.identifer.property";
 	
     public static final String HEADER_DSIGN = "dsign";
     public static final String HEADER_DSIGN_NS = "urn:dsign";
@@ -53,6 +54,10 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     
     public static final String HEADER_TIMESTAMP = "timestamp";
     public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
+
+    public static final String HEADER_WID = "writeid";
+    public static final String HEADER_WID_NS = "urn:writeid";
+
     
     private static final int NONCE_TIMEOUT = 2*60*1000; //in milliseconds
     
@@ -84,6 +89,12 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
 		try {
 			if (outbound) {
+				// send write identifier
+				if (operation.endsWith("get")) {
+					int wid = (int) smc.get(WRITE_IDENTIFIER_RESPONSE_PROPERTY);
+					addHeaderSM(smc, HEADER_WID,HEADER_WID_NS,""+wid);
+                }
+				
 				final byte[] plainBytes = getMessage(smc).getBytes();
 
 				// SEGURANCA : MAC
@@ -150,6 +161,13 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				byte[] macKey = decipher(parseHexBinary(macKeyCipheredText));
 				smc.put(MAC_KEY_REQUEST_PROPERTY, macKey);
 				smc.setScope(MAC_KEY_REQUEST_PROPERTY, Scope.HANDLER);	
+
+				// receive write identifier 
+                if (operation.endsWith("put")) {
+	                int wid = Integer.parseInt(getHeaderElement(smc, HEADER_WID, HEADER_WID_NS));
+	                smc.put(WRITE_IDENTIFIER_RESPONSE_PROPERTY, wid);
+	                smc.setScope(WRITE_IDENTIFIER_RESPONSE_PROPERTY, Scope.APPLICATION);
+                }
 			}
 
 		} catch (Exception e) {

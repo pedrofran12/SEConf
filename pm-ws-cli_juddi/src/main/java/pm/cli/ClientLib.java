@@ -6,7 +6,16 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import java.nio.ByteBuffer;
 import java.security.Key;
 import java.security.KeyStore;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+import javax.xml.ws.BindingProvider;
+import javax.xml.ws.Response;
+
+import com.sun.xml.ws.client.ClientTransportException;
 
 import pm.exception.cli.AlreadyExistsLoggedUserException;
 import pm.exception.cli.ClientException;
@@ -16,23 +25,36 @@ import pm.exception.cli.InvalidPasswordException;
 import pm.exception.cli.InvalidUsernameException;
 import pm.exception.cli.NoSessionException;
 import pm.handler.ClientHandler;
+import pm.ws.GetResponse;
 import pm.ws.InvalidDomainException_Exception;
 import pm.ws.InvalidKeyException_Exception;
 import pm.ws.InvalidPasswordException_Exception;
 import pm.ws.InvalidUsernameException_Exception;
 import pm.ws.KeyAlreadyExistsException_Exception;
 import pm.ws.PasswordManager;
+import pm.ws.PutResponse;
 import pm.ws.UnknownUsernameDomainException_Exception;
 import utilities.ObjectUtil;
 
 public class ClientLib {
-	private PasswordManager _pm;
+	private List<PasswordManager> _pmList = new ArrayList<>();
 	private KeyStore _ks;
 	private String _alias;
 	private char[] _password;
+	
+	private int number_tolerating_faults;
+	
+	
+	private int wts = 0;
 
+/*	
 	public ClientLib(PasswordManager port) {
 		_pm = port;
+	}
+	*/
+	public ClientLib(List<PasswordManager> pmList, int f) {
+		_pmList = pmList;
+		number_tolerating_faults = f;
 	}
 
 	public void init(KeyStore ks, String alias, char[] password) throws ClientException {
@@ -51,7 +73,16 @@ public class ClientLib {
 		if (!isSessionAlive())
 			throw new NoSessionException();
 		pm.ws.Key k = getPublicKey();
-		_pm.register(k);
+		
+		/*ArrayList<Response<RegisterResponse>> responsesList = new ArrayList<Response<RegisterResponse>>();
+		for(PasswordManager pm : _pmList)
+			responsesList.add(pm.registerAsync(k));
+		//_pm.register(k);
+		*/
+		//OR
+		for(PasswordManager pm : _pmList)
+			pm.register(k);
+		
 	}
 
 	public void save_password(byte[] domain, byte[] username, byte[] password)
@@ -69,7 +100,83 @@ public class ClientLib {
 		byte[] hashedUsername = hash(domain, username);
 		byte[] hashedPassword = passwordHash(password, domain, username);
 		byte[] cipheredPassword = cipher(hashedPassword);
-		_pm.put(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword);
+		
+		try {
+			System.out.println("Toca a matar essa merda toda sua filha de 30 putas");
+			Thread.sleep(10000);
+		} catch (InterruptedException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		
+		ArrayList<Response<PutResponse>> responsesList = new ArrayList<Response<PutResponse>>();
+		int wid = wts++;
+		for(PasswordManager pm : _pmList){
+			BindingProvider bindingProvider = (BindingProvider) pm;
+			Map<String, Object> requestContext = bindingProvider.getRequestContext();
+			// put token in request context
+			System.out.printf("put token '%d' on request context%n", wid);
+			requestContext.put(ClientHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY, wid);
+			responsesList.add(pm.putAsync(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword));
+		}
+
+		boolean success = false;
+		int numberResponses = 0;
+		ExecutionException exception = null;
+		while(numberResponses < 2*number_tolerating_faults + 1){
+			// to see exception
+			if (responsesList.size() == 0) throw new NoSessionException("Failed to get 2f+1 responses");
+	        for(Response<PutResponse> r : responsesList){
+	        	if(r.isDone()){
+	        		try {
+	                	//testar se Resposta e excepcao
+						r.get();
+						success = true;	
+						numberResponses++;
+	                }
+	        		catch (ClientTransportException e) {
+	        			System.out.println("Caught execution exception.");
+	                    System.out.print("Cause: ");
+	                    System.out.println(e.getMessage());
+	                    e.printStackTrace();
+	        		}
+	                catch (ExecutionException e1) {
+	                	//continue;
+	                	if (!(e1.getCause() instanceof ClientTransportException)) {
+	                		numberResponses++;
+	                		exception = e1;
+	                	}
+	                	System.out.println("FUCKKKKKKK\n\n\n\n\n\n\n\n");
+	                	System.out.println(e1.getMessage());
+	                	e1.printStackTrace();
+	                }
+	                catch (Exception e) {
+	                    System.out.println("Caught execution exception.");
+	                    System.out.print("Cause: ");
+	                    System.out.println(e.getMessage());
+	                    e.printStackTrace();
+	                    //continue;
+	                }
+	                responsesList.remove(r);
+	                break;
+	        	}
+	        }
+		}
+		if(!success) {
+			if (exception.getCause() instanceof InvalidKeyException_Exception)
+				throw (InvalidKeyException_Exception) exception.getCause();
+			else if (exception.getCause() instanceof InvalidDomainException_Exception)
+				throw (InvalidDomainException_Exception) exception.getCause();
+			else if (exception.getCause() instanceof InvalidUsernameException_Exception)
+				throw (InvalidUsernameException_Exception) exception.getCause();
+			else if (exception.getCause() instanceof InvalidPasswordException_Exception)
+				throw (InvalidPasswordException_Exception) exception.getCause();
+			else {
+				exception.printStackTrace();
+			}
+		}
+		
+		//_pm.put(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword);
 	}
 
 	public byte[] retrieve_password(byte[] domain, byte[] username)
@@ -83,7 +190,69 @@ public class ClientLib {
 			throw new InvalidUsernameException();
 		byte[] hashedDomain = hash(domain);
 		byte[] hashedUsername = hash(domain, username);
-		byte[] passwordCiphered = _pm.get(getPublicKey(), hashedDomain, hashedUsername);
+
+		ArrayList<Response<GetResponse>> responsesList = new ArrayList<Response<GetResponse>>();
+		for(PasswordManager pm : _pmList)
+			responsesList.add(pm.getAsync(getPublicKey(), hashedDomain, hashedUsername));
+		
+		int numberResponses = 0;
+        int latestTag = -1;
+        byte[] lastVersionContent = ("").getBytes();
+        ExecutionException exception = null;
+		while(numberResponses < 2*number_tolerating_faults + 1){
+	        for(Response<GetResponse> r : responsesList){
+	        	if(r.isDone()){
+	                try {
+	                	//testar se Resposta e excepcao
+						r.get();
+	                	
+		        		// access request context
+		        		Map<String, Object> responseContext = r.getContext();
+
+	                	byte[] content = r.get().getReturn().getValue();
+	                    System.out.println("Asynchronous call result: " + printHexBinary(r.get().getReturn().getValue()));
+
+	                    // get token from message context
+	                    int wid = (int) responseContext.get(ClientHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY);
+	                    System.out.printf("got token '%d' from response context%n", wid);
+
+	                    if(wid > latestTag){
+	                    	latestTag = wid;
+	                    	lastVersionContent = content;
+	                    }
+	                }
+	                catch (ExecutionException e1) {
+	                	//continue;
+	                	exception = e1;
+	                }
+	                catch (Exception e) {
+	                    System.out.println("Caught execution exception.");
+	                    System.out.print("Cause: ");
+	                    System.out.println(e.getCause());
+	                    //continue;
+	                }
+	                numberResponses++;
+	                responsesList.remove(r);
+	                break;
+	        	}
+	        }
+		}
+		if(latestTag==-1) {
+			if (exception.getCause() instanceof InvalidKeyException_Exception)
+				throw (InvalidKeyException_Exception) exception.getCause();
+			else if (exception.getCause() instanceof InvalidDomainException_Exception)
+				throw (InvalidDomainException_Exception) exception.getCause();
+			else if (exception.getCause() instanceof InvalidUsernameException_Exception)
+				throw (InvalidUsernameException_Exception) exception.getCause();
+			else if (exception.getCause() instanceof UnknownUsernameDomainException_Exception)
+				throw (UnknownUsernameDomainException_Exception) exception.getCause();
+			else
+				exception.printStackTrace();
+		}
+		
+		//byte[] passwordCiphered = _pm.get(getPublicKey(), hashedDomain, hashedUsername);
+		byte[] passwordCiphered = lastVersionContent;
+				//_pmList.get(0).get(getPublicKey(), hashedDomain, hashedUsername);
 		byte[] password;
 		try{
 			byte[] hashedPassword = decipher(passwordCiphered);
