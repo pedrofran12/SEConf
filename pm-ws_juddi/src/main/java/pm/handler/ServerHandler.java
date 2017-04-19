@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.sql.Timestamp;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -57,17 +58,22 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     
     private HashMap<Integer, Long> nonceMap = new HashMap<Integer, Long>();
 
-    private final PrivateKey _serverPrivateKey;
+    private static PrivateKey _serverPrivateKey;
     
-    public ServerHandler() throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
-        byte[] keyBytes = Files.readAllBytes(new File("ServerPrivate.key").toPath());
-
-        PKCS8EncodedKeySpec spec =
-          new PKCS8EncodedKeySpec(keyBytes);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        _serverPrivateKey = kf.generatePrivate(spec);
+    
+    public static void setPrivateKey(String port) {
+    	try {
+	        byte[] keyBytes = Files.readAllBytes(new File("ServerPrivate" + port + ".key").toPath());
+	
+	        PKCS8EncodedKeySpec spec =
+	          new PKCS8EncodedKeySpec(keyBytes);
+	        KeyFactory kf = KeyFactory.getInstance("RSA");
+	        _serverPrivateKey = kf.generatePrivate(spec);
+    	}
+        catch (Exception e) {
+        	e.printStackTrace();
+        }
     }
-    
     
 	@Override
 	public boolean handleMessage(SOAPMessageContext smc) {
@@ -321,6 +327,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 	private byte[] decipher(byte[] data) throws Exception{
 		return SecureServer.decipher(_serverPrivateKey, data);
 	}
+	
 	
 	
 	 /*

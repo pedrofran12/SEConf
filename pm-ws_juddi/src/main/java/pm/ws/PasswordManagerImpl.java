@@ -6,12 +6,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Resource;
-import javax.crypto.SecretKey;
 import javax.jws.HandlerChain;
 import javax.jws.WebService;
-import javax.xml.ws.WebServiceContext;
-import javax.xml.ws.handler.MessageContext;
 
 import pm.exception.*;
 import pm.handler.ServerHandler;
@@ -21,18 +17,16 @@ import utilities.ObjectUtil;
 import org.apache.commons.net.util.Base64;
 import org.apache.log4j.Logger;
 
-import static javax.xml.bind.DatatypeConverter.printHexBinary;
-
 
 @WebService(endpointInterface = "pm.ws.PasswordManager")
 @HandlerChain(file = "/handler-chain.xml")
 public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final String SAVE_STATE_NAME = "./PasswordManager.serial";
-	private static Logger log = Logger.getLogger(PasswordManagerImpl.class.getName());
+	private transient Logger log;
 
 	private final Map<java.security.Key, TripletStore> password;
-
+	
 	private PasswordManagerImpl() {
 		password = new HashMap<>();
 	}
@@ -96,13 +90,22 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	}
 
 	public static PasswordManager getInstance() {
-		PasswordManager pm = ObjectUtil.readObjectFile(SAVE_STATE_NAME, PasswordManagerImpl.class);
+		PasswordManagerImpl pm = ObjectUtil.readObjectFile(SAVE_STATE_NAME, PasswordManagerImpl.class);
 		if (pm != null) {
 			System.out.println(">>> Loaded state");
 		} else {
 			pm = new PasswordManagerImpl();
 			System.out.println(">>> Created");
 		}
+		pm.setPort("8080");
 		return pm;
+	}
+	
+	private void setPort(String port) {
+		//Set logger filename
+		System.setProperty("file.port", port);
+		log = Logger.getLogger(PasswordManagerImpl.class.getName() + port);
+		//set privatekey
+		ServerHandler.setPrivateKey(port);
 	}
 }

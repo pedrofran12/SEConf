@@ -10,12 +10,14 @@ import java.security.KeyStore;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Date;
+import java.net.URL;
 
 import javax.xml.soap.SOAPHeader;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.jws.HandlerChain;
 import javax.xml.soap.*;
+import javax.xml.ws.BindingProvider;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.handler.MessageContext.Scope;
 import javax.xml.ws.handler.soap.*;
@@ -60,17 +62,25 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 	private static KeyStore _ks;
 	private static String _alias;
 	private static char[] _password;
-	private final PublicKey _serverPublicKey;
+	private PublicKey _serverPublicKey;
 	
-	public ClientHandler() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException{
-	    byte[] keyBytes = Files.readAllBytes(new File("ServerPublic.key").toPath());
-
-	    X509EncodedKeySpec spec =
-	      new X509EncodedKeySpec(keyBytes);
-	    KeyFactory kf = KeyFactory.getInstance("RSA");
-	    _serverPublicKey = kf.generatePublic(spec);
+	
+	public void setServerPublicKey(String url) {
+		if(_serverPublicKey != null)
+			return;	    
+		try{
+		    int port = new URL(url).getPort();
+		    byte[] keyBytes = Files.readAllBytes(new File("ServerPublic" + port + ".key").toPath());
+			System.out.println("ServerPublic" + port + ".key");
+		    X509EncodedKeySpec spec =
+		      new X509EncodedKeySpec(keyBytes);
+		    KeyFactory kf = KeyFactory.getInstance("RSA");
+		    _serverPublicKey = kf.generatePublic(spec);
+		}
+		catch(Exception e){
+		}
 	}
-	
+
 	
 	public static void setHandler(KeyStore ks, String alias, char[] password){
 		_ks = ks;
@@ -84,8 +94,10 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
         String operation = smc.get(MessageContext.WSDL_OPERATION).toString();
         System.out.println("\nOutbound = " + outbound);
         System.out.println("Method = " + operation+"\n");
+
         
         System.out.println(getMessage(smc));
+        setServerPublicKey(smc.get(BindingProvider.ENDPOINT_ADDRESS_PROPERTY).toString());
         try {
         	
             if (outbound) {
