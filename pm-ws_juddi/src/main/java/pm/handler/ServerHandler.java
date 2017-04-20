@@ -1,18 +1,29 @@
 package pm.handler;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.Files;
 import java.sql.Timestamp;
+import java.security.Key;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Date;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.xml.soap.*;
 import javax.xml.ws.handler.MessageContext;
+import javax.xml.ws.handler.MessageContext.Scope;
 import javax.xml.ws.handler.soap.*;
 
 import org.apache.commons.net.ntp.NTPUDPClient;
@@ -23,10 +34,19 @@ import pm.ws.SecureServer;
 import utilities.ObjectUtil;
 
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
+import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
+	public static final String MAC_KEY_REQUEST_PROPERTY = "mac.key.request.property";
+	
     public static final String HEADER_DSIGN = "dsign";
     public static final String HEADER_DSIGN_NS = "urn:dsign";
+	
+    public static final String HEADER_MAC_KEY = "mac-key";
+    public static final String HEADER_MAC_KEY_NS = "urn:mac-key"; 
+    
+    public static final String HEADER_MAC = "mac";
+    public static final String HEADER_MAC_NS = "urn:mac";    
     
     public static final String HEADER_NONCE = "nonce";
     public static final String HEADER_NONCE_NS = "urn:nonce";
@@ -38,7 +58,23 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     
     private HashMap<Integer, Long> nonceMap = new HashMap<Integer, Long>();
 
-
+    private static PrivateKey _serverPrivateKey;
+    
+    
+    public static void setPrivateKey(String port) {
+    	try {
+	        byte[] keyBytes = Files.readAllBytes(new File("ServerPrivate" + port + ".key").toPath());
+	
+	        PKCS8EncodedKeySpec spec =
+	          new PKCS8EncodedKeySpec(keyBytes);
+	        KeyFactory kf = KeyFactory.getInstance("RSA");
+	        _serverPrivateKey = kf.generatePrivate(spec);
+    	}
+        catch (Exception e) {
+        	e.printStackTrace();
+        }
+    }
+    
 	@Override
 	public boolean handleMessage(SOAPMessageContext smc) {
 		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
@@ -48,29 +84,29 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
 		try {
 			if (outbound) {
-				//final byte[] plainBytes = getMessage(smc).getBytes();
+				final byte[] plainBytes = getMessage(smc).getBytes();
 
 				// SEGURANCA : MAC
-				//HandlerSecurity security = getHandlerSecurity();
-				//System.out.println("=======================\n\n\n\n\n");
-
 				// make MAC
-				//byte[] cipherDigest = makeSignature(plainBytes);
-				//addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));
-
-			} else {
+				byte[] macKey = (byte[]) smc.get(MAC_KEY_REQUEST_PROPERTY);
+				System.out.println("outbound key: " + printHexBinary(macKey));
+				
+				byte[] mac = makeMAC(macKey, plainBytes);
+				addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(mac));
+			}
+			else {
 				// message that is going to be sent from client to server
 			    getMessage(smc); //required to program to work
 			   	
-				//Get MAC value
-				String mac = getHeaderElement(smc, HEADER_DSIGN, HEADER_DSIGN_NS);
+				//Get DSIGN value
+				String dsign = getHeaderElement(smc, HEADER_DSIGN, HEADER_DSIGN_NS);
 
-				//SOAP Message does not have MAC
-				if (mac == null) {
+				//SOAP Message does not have DSIGN
+				if (dsign == null) {
 					return false;
 				}
 
-				//Remove MAC from header
+				//Remove DSIGN from header
 				SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
 				NodeList nl = header.getChildNodes();
 				for (int i = 0; i < nl.getLength(); i++) {
@@ -80,22 +116,19 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				}
 				header.normalize();
 
-				//SOAP Message bytes without MAC
+				//SOAP Message bytes without DSIGN
 				final byte[] plainBytes = getMessage(smc).getBytes();
-
-				// SEGURANCA : MAC
-				//HandlerSecurity security = getHandlerSecurity();
 
 				//Client's Key
 				byte[] byteElement = getBodyElement(smc, "key").getBytes();
 				byte[] publicKeyClient = Base64.getDecoder().decode(byteElement);
 
-				//Generate's MAC
-				byte[] cipherDigest = parseHexBinary(mac);
+				//Generate's DSIGN
+				byte[] cipherDigest = parseHexBinary(dsign);
 
-				// verify the MAC
+				// verify the DSIGN
 				boolean result = verifySignature(publicKeyClient, cipherDigest, plainBytes);
-				System.out.println("MAC is " + (result ? "right" : "wrong"));
+				System.out.println("DSIGN is " + (result ? "right" : "wrong"));
 
 				if (!result) {
 					return false;
@@ -111,6 +144,12 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
                     System.out.println(">>> Replay attack detected");
                 	return false;
                 }
+                
+                //Get generated mac key of client
+                String macKeyCipheredText = getHeaderElement(smc, HEADER_MAC_KEY, HEADER_MAC_KEY_NS);
+				byte[] macKey = decipher(parseHexBinary(macKeyCipheredText));
+				smc.put(MAC_KEY_REQUEST_PROPERTY, macKey);
+				smc.setScope(MAC_KEY_REQUEST_PROPERTY, Scope.HANDLER);	
 			}
 
 		} catch (Exception e) {
@@ -275,6 +314,22 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 		return SecureServer.verifySignature(publicKey, signature, data);
 	}
 
+	private byte[] makeMAC(byte[] secretKeyByte, byte[] data) throws Exception{
+		SecretKey key = new SecretKeySpec(secretKeyByte, 0, secretKeyByte.length, SecureServer.MAC);
+		return SecureServer.makeMAC(key, data);
+	}
+	
+	private boolean verifyMAC(byte[] secretKeyByte, byte[] mac, byte[] data) throws Exception{
+		SecretKey key = new SecretKeySpec(secretKeyByte, 0, secretKeyByte.length, SecureServer.MAC);
+		return SecureServer.verifyMAC(key, mac, data);
+	}
+	
+	private byte[] decipher(byte[] data) throws Exception{
+		return SecureServer.decipher(_serverPrivateKey, data);
+	}
+	
+	
+	
 	 /*
      * Checks for nonce in map
      * TRUE: 

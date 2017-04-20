@@ -8,8 +8,10 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.util.Arrays;
 
 import javax.crypto.Cipher;
+import javax.crypto.Mac;
 
 
 public class SecureServer{
@@ -17,6 +19,7 @@ public class SecureServer{
 	public static final String CIPHER_ALGORITHM = "RSA";
 	public static final String HASH_ALGORITHM = "SHA-256";
 	private static final String DIGITAL_SIGNATURE = "SHA256withRSA";
+	public static final String MAC = "HmacSHA256";
 
 
 	
@@ -34,19 +37,20 @@ public class SecureServer{
 	
 	public static byte[] decipher(KeyStore ks, String alias, char[] password, byte[] cipheredMessage) throws Exception{
 		PrivateKey key = getPrivateKey(ks, alias, password);
-		
-	    byte[] dectyptedText = null;
-	    // get an RSA cipher object and print the provider
+	    return decipher(key, cipheredMessage);
+	}
+	
+	public static byte[] decipher(PrivateKey key, byte[] cipheredMessage) throws Exception{
+		// get an RSA cipher object and print the provider
 	    final Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
 
 	    // decrypt the text using the private key
 	    cipher.init(Cipher.DECRYPT_MODE, key);
-	    dectyptedText = cipher.doFinal(cipheredMessage);
-
+	    byte[] dectyptedText = cipher.doFinal(cipheredMessage);
 	    return dectyptedText;
 	}
-
-    public static byte[] hash(byte[] data) throws NoSuchAlgorithmException {
+    
+	public static byte[] hash(byte[] data) throws NoSuchAlgorithmException {
     	MessageDigest md = MessageDigest.getInstance(HASH_ALGORITHM);
         md.update(data);
         return md.digest();
@@ -103,4 +107,22 @@ public class SecureServer{
 		return cipher.verify(cipherDigest);
 	}
 	
+	
+	/*************************************
+	 * MESSAGE AUTHENTICATION CODES (MACS)
+	 *************************************/
+    public static byte[] makeMAC(Key k, byte[] bytes) throws Exception {
+    	Mac authenticator = Mac.getInstance(MAC);
+    	authenticator.init(k);
+        byte[] msgAuthenticator = authenticator.doFinal(bytes);
+        return msgAuthenticator;
+    }
+
+    public static boolean verifyMAC(Key k, byte[] cipherDigest,
+    								byte[] bytes) throws Exception {
+    	Mac authenticator = Mac.getInstance(MAC);
+    	authenticator.init(k);
+        byte[] msgAuthenticator = authenticator.doFinal(bytes);
+        return Arrays.equals(cipherDigest, msgAuthenticator);
+    }
 }

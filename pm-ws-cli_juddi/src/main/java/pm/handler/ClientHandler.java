@@ -1,46 +1,86 @@
 package pm.handler;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Date;
+import java.net.URL;
 
 import javax.xml.soap.SOAPHeader;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.jws.HandlerChain;
 import javax.xml.soap.*;
+import javax.xml.ws.BindingProvider;
 import javax.xml.ws.handler.MessageContext;
+import javax.xml.ws.handler.MessageContext.Scope;
 import javax.xml.ws.handler.soap.*;
 
 import pm.cli.SecureClient;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
+import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 //Nonce + Timestamp
 import java.net.InetAddress;
+import java.nio.file.Files;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.sql.Timestamp;
 
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
+import org.w3c.dom.NodeList;
 
 @HandlerChain(file = "/handler-chain.xml")
 public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 
 	public static final String HEADER_DSIGN = "dsign";
 	public static final String HEADER_DSIGN_NS = "urn:dsign";
-
-	public static final String HEADER_NONCE = "nonce";
+    
+	public static final String HEADER_MAC_KEY = "mac-key";
+    public static final String HEADER_MAC_KEY_NS = "urn:mac-key"; 
+    
+	public static final String HEADER_MAC = "mac";
+    public static final String HEADER_MAC_NS = "urn:mac";     
+	
+    public static final String HEADER_NONCE = "nonce";
     public static final String HEADER_NONCE_NS = "urn:nonce";
     
     public static final String HEADER_TIMESTAMP = "timestamp";
     public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
 
+    public static final String MAC_KEY_REQUEST_PROPERTY = "mac.key.request.property";
+	
 	private static KeyStore _ks;
 	private static String _alias;
 	private static char[] _password;
+	private PublicKey _serverPublicKey;
 	
+	
+	public void setServerPublicKey(String url) {
+		if(_serverPublicKey != null)
+			return;	    
+		try{
+		    int port = new URL(url).getPort();
+		    byte[] keyBytes = Files.readAllBytes(new File("ServerPublic" + port + ".key").toPath());
+			System.out.println("ServerPublic" + port + ".key");
+		    X509EncodedKeySpec spec =
+		      new X509EncodedKeySpec(keyBytes);
+		    KeyFactory kf = KeyFactory.getInstance("RSA");
+		    _serverPublicKey = kf.generatePublic(spec);
+		}
+		catch(Exception e){
+		}
+	}
+
 	
 	public static void setHandler(KeyStore ks, String alias, char[] password){
 		_ks = ks;
@@ -54,11 +94,18 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
         String operation = smc.get(MessageContext.WSDL_OPERATION).toString();
         System.out.println("\nOutbound = " + outbound);
         System.out.println("Method = " + operation+"\n");
+
         
         System.out.println(getMessage(smc));
+        setServerPublicKey(smc.get(BindingProvider.ENDPOINT_ADDRESS_PROPERTY).toString());
         try {
         	
             if (outbound) {
+            	// Generate MAC key for integrity purposes on the response message
+            	byte[] macKey = generateMacKey();
+                addHeaderSM(smc, HEADER_MAC_KEY, HEADER_MAC_KEY_NS, printHexBinary(cipher(macKey)));
+            	smc.put(MAC_KEY_REQUEST_PROPERTY, macKey);
+            	smc.setScope(MAC_KEY_REQUEST_PROPERTY, Scope.HANDLER);
                 
                 // NONCE + Timestamp //
                 int nonce = generateNonce();
@@ -72,47 +119,46 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
                 final byte[] plainBytes = plainText.getBytes();
 
                 // SEGURANCA : DSIGN
-                // make MAC
+                // make DSIGN
 				byte[] cipherDigest = makeSignature(plainBytes);
 
                 addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(cipherDigest));
             } 
             else {
-                // message that is going to be sent from client to server
+                // message that is going to be sent from server to client
 
-                // Get DSIGN value
-                //String mac = getHeaderElement(smc, HEADER_DSIGN, HEADER_DSIGN_NS);
+                // Get MAC value
+                String mac = getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS);
 
-                // SOAP Message does not have DSIGN
-            	//if (mac == null)
-            	//    return false;
+                // SOAP Message does not have MAC
+            	if (mac == null)
+            	    return false;
 
-                // Remove from Header DSIGN components
-            	//SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
-            	//NodeList nl = header.getChildNodes();
-            	//for (int i = 0; i < nl.getLength(); i++) {
-            	//    if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN)) {
-            	//        header.removeChild(nl.item(i));
-            	//    }
-            	//}
-            	//header.normalize();
+                // Remove from Header MAC components
+            	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
+            	NodeList nl = header.getChildNodes();
+            	for (int i = 0; i < nl.getLength(); i++) {
+            	    if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
+            	        header.removeChild(nl.item(i));
+            	    }
+            	}
+            	header.normalize();
 
-                // SOAP Message in bytes without DSIGN from Header
-            	//final byte[] plainBytes = getMessage(smc).getBytes();
+                // SOAP Message in bytes without MAC from Header
+            	byte[] plainBytes = getMessage(smc).getBytes();
 
                 // SEGURANCA : MAC
-            	//HandlerSecurity security = getHandlerSecurity();
+            	// make MAC
+            	byte[] cipherDigest = parseHexBinary(mac);
 
-                // make DSIGN
-            	//byte[] cipherDigest = parseHexBinary(mac);
+                // verify the MAC
+            	byte[] macKey = (byte[]) smc.get(MAC_KEY_REQUEST_PROPERTY);
+            	boolean result = verifyMAC(macKey, cipherDigest, plainBytes);
+            	System.out.println("\nMAC is " + (result ? "right" : "wrong"));
 
-                // verify the DSIGN
-            	//boolean result = security.verifySignature(cipherDigest, plainBytes);
-            	//System.out.println("\nDSIGN is " + (result ? "right" : "wrong"));
-
-            	//if (!result) {
-            	//   return false;
-            	//}
+            	if (!result) {
+            	   return false;
+            	}
             }
         } catch (Exception e) {
             System.out.print("Caught exception in handleMessage: ");
@@ -277,5 +323,25 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 	
 	private boolean verifySignature(byte[] signature, byte[] data) throws Exception{
 		return SecureClient.verifySignature(_ks, _alias, _password, signature, data);
+	}
+	
+	private byte[] makeMAC(byte[] secretKeyByte, byte[] data) throws Exception{
+		SecretKey key = new SecretKeySpec(secretKeyByte, 0, secretKeyByte.length, SecureClient.MAC);
+		return SecureClient.makeMAC(key, data);
+	}
+	
+	private boolean verifyMAC(byte[] secretKeyByte, byte[] mac, byte[] data) throws Exception{
+		SecretKey key = new SecretKeySpec(secretKeyByte, 0, secretKeyByte.length, SecureClient.MAC);
+		return SecureClient.verifyMAC(key, mac, data);
+	}
+	
+	private byte[] generateMacKey() throws Exception{
+		SecretKey k = SecureClient.generateMacKey();
+		System.out.println("mac key generated: " + printHexBinary(k.getEncoded()));
+		return k.getEncoded();
+	}
+	
+	private byte[] cipher(byte[] data) throws Exception{
+		return SecureClient.cipher(_serverPublicKey, data);
 	}
 }

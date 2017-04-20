@@ -117,9 +117,7 @@ public class Client_Test {
 		c.register_user();
 	}
 
-	@Test(expected = KeyAlreadyExistsException_Exception.class) // com.sun.xml.ws.fault.ServerSOAPFaultException
-																// =
-																// KeyAlreadyExists!
+	@Test(expected = KeyAlreadyExistsException_Exception.class) 
 	public void testRegisterUser_KeyAlreadyExists()
 			throws ClientException, InvalidKeyException_Exception, KeyAlreadyExistsException_Exception {
 		char[] password = "reborn".toCharArray();
