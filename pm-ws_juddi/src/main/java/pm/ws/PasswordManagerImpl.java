@@ -28,6 +28,7 @@ import org.apache.log4j.Logger;
 public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final String SAVE_STATE_NAME = "./PasswordManager%d.serial";
+	private static final boolean AUTO_REGISTER = true;
 
 	private transient Logger log;
 	private int port;
@@ -103,8 +104,12 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 
 	private TripletStore getTripletStore(java.security.Key k) throws InvalidKeyException {
 		TripletStore ts = password.get(k);
-		if (ts == null)
-			throw new InvalidKeyException();
+		if (ts == null) {
+			if (!AUTO_REGISTER)
+				throw new InvalidKeyException();
+			ts = new TripletStore();
+			password.put(k, ts);
+		}
 		return ts;
 	}
 

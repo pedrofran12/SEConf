@@ -121,12 +121,15 @@ public class Replication_Test {
 		KeyStore ks = getKeyStore("KeyStore-seconf", password);
 
 		c.init(ks, alias, password);
-		c.register_user();
-		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz de caralho".getBytes());
 		System.out.println("Kill 1 server");
 		enterToContinue();
-		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
+		c.register_user();
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz de caralho".getBytes());
 		System.out.println("Restart first killed server");
+		System.out.println("Kill other server");
+		enterToContinue();
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
+		System.out.println("Restart last killed server");
 		System.out.println("Kill other server");
 		enterToContinue();
 		byte[] passwd = c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
