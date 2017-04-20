@@ -124,6 +124,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private synchronized void saveState() {
 		String fileName = String.format(SAVE_STATE_NAME, port);
 		boolean saved = ObjectUtil.writeObjectFile(fileName, this);
+		//boolean saved = true;
 		if (saved) {
 			System.out.println(">>> Saved state");
 		} else {

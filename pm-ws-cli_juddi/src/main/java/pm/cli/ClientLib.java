@@ -19,6 +19,7 @@ import com.sun.xml.ws.client.ClientTransportException;
 
 import pm.exception.cli.AlreadyExistsLoggedUserException;
 import pm.exception.cli.ClientException;
+import pm.exception.cli.InsufficientResponsesException;
 import pm.exception.cli.InvalidDomainException;
 import pm.exception.cli.InvalidKeyStoreException;
 import pm.exception.cli.InvalidPasswordException;
@@ -33,10 +34,12 @@ import pm.ws.InvalidUsernameException_Exception;
 import pm.ws.KeyAlreadyExistsException_Exception;
 import pm.ws.PasswordManager;
 import pm.ws.PutResponse;
+import pm.ws.RegisterResponse;
 import pm.ws.UnknownUsernameDomainException_Exception;
 import utilities.ObjectUtil;
 
 public class ClientLib {
+	private static final long WAITING_TIME = 30 * 1000;
 	private List<PasswordManager> _pmList = new ArrayList<>();
 	private KeyStore _ks;
 	private String _alias;
@@ -74,14 +77,63 @@ public class ClientLib {
 			throw new NoSessionException();
 		pm.ws.Key k = getPublicKey();
 		
-		/*ArrayList<Response<RegisterResponse>> responsesList = new ArrayList<Response<RegisterResponse>>();
+		ArrayList<Response<RegisterResponse>> responsesList = new ArrayList<Response<RegisterResponse>>();
 		for(PasswordManager pm : _pmList)
 			responsesList.add(pm.registerAsync(k));
-		//_pm.register(k);
-		*/
-		//OR
-		for(PasswordManager pm : _pmList)
-			pm.register(k);
+		
+		boolean success = false;
+		int numberResponses = 0;
+		ExecutionException exception = null;
+		long current = System.currentTimeMillis();
+		while(numberResponses < 2*number_tolerating_faults + 1){
+			// to see exception
+			if (System.currentTimeMillis() - current > WAITING_TIME || // waiting time exceeded
+					responsesList.isEmpty()) { // no more servers to communicate
+				throw new InsufficientResponsesException();
+			}
+			
+	        for(Response<RegisterResponse> r : responsesList){
+	        	if(r.isDone()){
+	        		try {
+	                	//testar se Resposta e excepcao
+						r.get();
+						success = true;	
+						numberResponses++;
+	                }
+	        		catch (ClientTransportException e) {
+	        			System.out.println("Caught execution exception.");
+	                    System.out.print("Cause: ");
+	                    System.out.println(e.getMessage());
+	                    e.printStackTrace();
+	        		}
+	                catch (ExecutionException e1) {
+	                	if (!(e1.getCause() instanceof ClientTransportException)) {
+	                		numberResponses++;
+	                		exception = e1;
+	                	} else {
+	                		e1.printStackTrace();
+	                	}
+	                }
+	                catch (Exception e) {
+	                    System.out.println("Caught execution exception.");
+	                    System.out.print("Cause: ");
+	                    System.out.println(e.getMessage());
+	                    e.printStackTrace();
+	                }
+	                responsesList.remove(r);
+	                break;
+	        	}
+	        }
+		}
+		if(!success) {
+			if (exception.getCause() instanceof InvalidKeyException_Exception)
+				throw (InvalidKeyException_Exception) exception.getCause();
+			else if (exception.getCause() instanceof KeyAlreadyExistsException_Exception)
+				throw (KeyAlreadyExistsException_Exception) exception.getCause();
+			else {
+				exception.printStackTrace();
+			}
+		}
 		
 	}
 
@@ -101,14 +153,6 @@ public class ClientLib {
 		byte[] hashedPassword = passwordHash(password, domain, username);
 		byte[] cipheredPassword = cipher(hashedPassword);
 		
-		try {
-			System.out.println("Toca a matar essa merda toda sua filha de 30 putas");
-			Thread.sleep(10000);
-		} catch (InterruptedException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-		
 		ArrayList<Response<PutResponse>> responsesList = new ArrayList<Response<PutResponse>>();
 		int wid = wts++;
 		for(PasswordManager pm : _pmList){
@@ -123,9 +167,14 @@ public class ClientLib {
 		boolean success = false;
 		int numberResponses = 0;
 		ExecutionException exception = null;
+		long current = System.currentTimeMillis();
 		while(numberResponses < 2*number_tolerating_faults + 1){
 			// to see exception
-			if (responsesList.size() == 0) throw new NoSessionException("Failed to get 2f+1 responses");
+			if (System.currentTimeMillis() - current > WAITING_TIME || // waiting time exceeded
+					responsesList.isEmpty()) { // no more servers to communicate
+				throw new InsufficientResponsesException();
+			}
+			
 	        for(Response<PutResponse> r : responsesList){
 	        	if(r.isDone()){
 	        		try {
@@ -141,21 +190,18 @@ public class ClientLib {
 	                    e.printStackTrace();
 	        		}
 	                catch (ExecutionException e1) {
-	                	//continue;
 	                	if (!(e1.getCause() instanceof ClientTransportException)) {
 	                		numberResponses++;
 	                		exception = e1;
+	                	} else {
+	                		e1.printStackTrace();
 	                	}
-	                	System.out.println("FUCKKKKKKK\n\n\n\n\n\n\n\n");
-	                	System.out.println(e1.getMessage());
-	                	e1.printStackTrace();
 	                }
 	                catch (Exception e) {
 	                    System.out.println("Caught execution exception.");
 	                    System.out.print("Cause: ");
 	                    System.out.println(e.getMessage());
 	                    e.printStackTrace();
-	                    //continue;
 	                }
 	                responsesList.remove(r);
 	                break;
@@ -199,13 +245,19 @@ public class ClientLib {
         int latestTag = -1;
         byte[] lastVersionContent = ("").getBytes();
         ExecutionException exception = null;
+        long current = System.currentTimeMillis();
 		while(numberResponses < 2*number_tolerating_faults + 1){
+			// to see exception
+			if (System.currentTimeMillis() - current > WAITING_TIME || // waiting time exceeded
+					responsesList.isEmpty()) { // no more servers to communicate
+				throw new InsufficientResponsesException();
+			}
 	        for(Response<GetResponse> r : responsesList){
 	        	if(r.isDone()){
 	                try {
 	                	//testar se Resposta e excepcao
 						r.get();
-	                	
+						numberResponses++;
 		        		// access request context
 		        		Map<String, Object> responseContext = r.getContext();
 
@@ -222,16 +274,18 @@ public class ClientLib {
 	                    }
 	                }
 	                catch (ExecutionException e1) {
-	                	//continue;
-	                	exception = e1;
+	                	if (!(e1.getCause() instanceof ClientTransportException)) {
+	                		numberResponses++;
+	                		exception = e1;
+	                	} else {
+	                		e1.printStackTrace();
+	                	}
 	                }
 	                catch (Exception e) {
 	                    System.out.println("Caught execution exception.");
 	                    System.out.print("Cause: ");
 	                    System.out.println(e.getCause());
-	                    //continue;
 	                }
-	                numberResponses++;
 	                responsesList.remove(r);
 	                break;
 	        	}
