@@ -89,6 +89,8 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
 		try {
 			if (outbound) {
+				getMessage(smc);
+
 				// send write identifier
 				if (operation.endsWith("get")) {
 					int wid = (int) smc.get(WRITE_IDENTIFIER_RESPONSE_PROPERTY);
