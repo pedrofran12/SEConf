@@ -5,6 +5,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import javax.annotation.Resource;
 import javax.jws.HandlerChain;
@@ -20,7 +24,7 @@ import utilities.ObjectUtil;
 
 import org.apache.commons.net.util.Base64;
 import org.apache.log4j.FileAppender;
-import org.apache.log4j.Logger;
+//import org.apache.log4j.Logger;
 
 
 @WebService(endpointInterface = "pm.ws.PasswordManager")
@@ -31,6 +35,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private static final boolean AUTO_REGISTER = true;
 
 	private transient Logger log;
+	private transient FileHandler fh;
 	private int port;
 	private final Map<java.security.Key, TripletStore> password;
 	
@@ -152,8 +157,9 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	
 	private void setPort(String port) {
 		//Set logger filename
-		System.setProperty("file.port", port);
+		//System.setProperty("file.port", port);
 		log = Logger.getLogger(PasswordManagerImpl.class.getName() + port);
+		log.setUseParentHandlers(false);
 		//set privatekey
 		ServerHandler.setPrivateKey(port);
 	}
@@ -175,7 +181,17 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	}
 	
 	private void log(String toPrint){
-		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : " + toPrint);
+		try {
+			FileHandler fh = new FileHandler(PasswordManagerImpl.class.getName() + port + ".out", true);
+			SimpleFormatter formatter = new SimpleFormatter();  
+	        fh.setFormatter(formatter);
+	        log.addHandler(fh);
+			log.info(toPrint);
+			fh.flush();
+			fh.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private String logToString(String methodName, java.security.Key key, byte[]... args){
