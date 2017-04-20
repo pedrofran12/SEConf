@@ -38,26 +38,14 @@ import pm.ws.RegisterResponse;
 import pm.ws.UnknownUsernameDomainException_Exception;
 import utilities.ObjectUtil;
 
-public class ClientLib {
-	private static final long WAITING_TIME = 30 * 1000;
-	private List<PasswordManager> _pmList = new ArrayList<>();
+public class ClientLib extends ClientLibReplicated {
 	private KeyStore _ks;
 	private String _alias;
 	private char[] _password;
-	
-	private int number_tolerating_faults;
-	
-	
 	private int wts = 0;
 
-/*	
-	public ClientLib(PasswordManager port) {
-		_pm = port;
-	}
-	*/
 	public ClientLib(List<PasswordManager> pmList, int f) {
-		_pmList = pmList;
-		number_tolerating_faults = f;
+		super(pmList, f);
 	}
 
 	public void init(KeyStore ks, String alias, char[] password) throws ClientException {
@@ -77,64 +65,7 @@ public class ClientLib {
 			throw new NoSessionException();
 		pm.ws.Key k = getPublicKey();
 		
-		ArrayList<Response<RegisterResponse>> responsesList = new ArrayList<Response<RegisterResponse>>();
-		for(PasswordManager pm : _pmList)
-			responsesList.add(pm.registerAsync(k));
-		
-		boolean success = false;
-		int numberResponses = 0;
-		ExecutionException exception = null;
-		long current = System.currentTimeMillis();
-		while(numberResponses < 2*number_tolerating_faults + 1){
-			// to see exception
-			if (System.currentTimeMillis() - current > WAITING_TIME || // waiting time exceeded
-					responsesList.isEmpty()) { // no more servers to communicate
-				throw new InsufficientResponsesException();
-			}
-			
-	        for(Response<RegisterResponse> r : responsesList){
-	        	if(r.isDone()){
-	        		try {
-	                	//testar se Resposta e excepcao
-						r.get();
-						success = true;	
-						numberResponses++;
-	                }
-	        		catch (ClientTransportException e) {
-	        			System.out.println("Caught execution exception.");
-	                    System.out.print("Cause: ");
-	                    System.out.println(e.getMessage());
-	                    e.printStackTrace();
-	        		}
-	                catch (ExecutionException e1) {
-	                	if (!(e1.getCause() instanceof ClientTransportException)) {
-	                		numberResponses++;
-	                		exception = e1;
-	                	} else {
-	                		e1.printStackTrace();
-	                	}
-	                }
-	                catch (Exception e) {
-	                    System.out.println("Caught execution exception.");
-	                    System.out.print("Cause: ");
-	                    System.out.println(e.getMessage());
-	                    e.printStackTrace();
-	                }
-	                responsesList.remove(r);
-	                break;
-	        	}
-	        }
-		}
-		if(!success) {
-			if (exception.getCause() instanceof InvalidKeyException_Exception)
-				throw (InvalidKeyException_Exception) exception.getCause();
-			else if (exception.getCause() instanceof KeyAlreadyExistsException_Exception)
-				throw (KeyAlreadyExistsException_Exception) exception.getCause();
-			else {
-				exception.printStackTrace();
-			}
-		}
-		
+		register(k);
 	}
 
 	public void save_password(byte[] domain, byte[] username, byte[] password)
@@ -152,77 +83,9 @@ public class ClientLib {
 		byte[] hashedUsername = hash(domain, username);
 		byte[] hashedPassword = passwordHash(password, domain, username);
 		byte[] cipheredPassword = cipher(hashedPassword);
-		
-		ArrayList<Response<PutResponse>> responsesList = new ArrayList<Response<PutResponse>>();
 		int wid = wts++;
-		for(PasswordManager pm : _pmList){
-			BindingProvider bindingProvider = (BindingProvider) pm;
-			Map<String, Object> requestContext = bindingProvider.getRequestContext();
-			// put token in request context
-			System.out.printf("put token '%d' on request context%n", wid);
-			requestContext.put(ClientHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY, wid);
-			responsesList.add(pm.putAsync(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword));
-		}
-
-		boolean success = false;
-		int numberResponses = 0;
-		ExecutionException exception = null;
-		long current = System.currentTimeMillis();
-		while(numberResponses < 2*number_tolerating_faults + 1){
-			// to see exception
-			if (System.currentTimeMillis() - current > WAITING_TIME || // waiting time exceeded
-					responsesList.isEmpty()) { // no more servers to communicate
-				throw new InsufficientResponsesException();
-			}
-			
-	        for(Response<PutResponse> r : responsesList){
-	        	if(r.isDone()){
-	        		try {
-	                	//testar se Resposta e excepcao
-						r.get();
-						success = true;	
-						numberResponses++;
-	                }
-	        		catch (ClientTransportException e) {
-	        			System.out.println("Caught execution exception.");
-	                    System.out.print("Cause: ");
-	                    System.out.println(e.getMessage());
-	                    e.printStackTrace();
-	        		}
-	                catch (ExecutionException e1) {
-	                	if (!(e1.getCause() instanceof ClientTransportException)) {
-	                		numberResponses++;
-	                		exception = e1;
-	                	} else {
-	                		e1.printStackTrace();
-	                	}
-	                }
-	                catch (Exception e) {
-	                    System.out.println("Caught execution exception.");
-	                    System.out.print("Cause: ");
-	                    System.out.println(e.getMessage());
-	                    e.printStackTrace();
-	                }
-	                responsesList.remove(r);
-	                break;
-	        	}
-	        }
-		}
-		if(!success) {
-			if (exception.getCause() instanceof InvalidKeyException_Exception)
-				throw (InvalidKeyException_Exception) exception.getCause();
-			else if (exception.getCause() instanceof InvalidDomainException_Exception)
-				throw (InvalidDomainException_Exception) exception.getCause();
-			else if (exception.getCause() instanceof InvalidUsernameException_Exception)
-				throw (InvalidUsernameException_Exception) exception.getCause();
-			else if (exception.getCause() instanceof InvalidPasswordException_Exception)
-				throw (InvalidPasswordException_Exception) exception.getCause();
-			else {
-				exception.printStackTrace();
-			}
-		}
 		
-		//_pm.put(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword);
+		put(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword, wid);
 	}
 
 	public byte[] retrieve_password(byte[] domain, byte[] username)
@@ -236,77 +99,17 @@ public class ClientLib {
 			throw new InvalidUsernameException();
 		byte[] hashedDomain = hash(domain);
 		byte[] hashedUsername = hash(domain, username);
-
-		ArrayList<Response<GetResponse>> responsesList = new ArrayList<Response<GetResponse>>();
-		for(PasswordManager pm : _pmList)
-			responsesList.add(pm.getAsync(getPublicKey(), hashedDomain, hashedUsername));
 		
-		int numberResponses = 0;
-        int latestTag = -1;
-        byte[] lastVersionContent = ("").getBytes();
-        ExecutionException exception = null;
-        long current = System.currentTimeMillis();
-		while(numberResponses < 2*number_tolerating_faults + 1){
-			// to see exception
-			if (System.currentTimeMillis() - current > WAITING_TIME || // waiting time exceeded
-					responsesList.isEmpty()) { // no more servers to communicate
-				throw new InsufficientResponsesException();
-			}
-	        for(Response<GetResponse> r : responsesList){
-	        	if(r.isDone()){
-	                try {
-	                	//testar se Resposta e excepcao
-						r.get();
-						numberResponses++;
-		        		// access request context
-		        		Map<String, Object> responseContext = r.getContext();
-
-	                	byte[] content = r.get().getReturn().getValue();
-	                    System.out.println("Asynchronous call result: " + printHexBinary(r.get().getReturn().getValue()));
-
-	                    // get token from message context
-	                    int wid = (int) responseContext.get(ClientHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY);
-	                    System.out.printf("got token '%d' from response context%n", wid);
-
-	                    if(wid > latestTag){
-	                    	latestTag = wid;
-	                    	lastVersionContent = content;
-	                    }
-	                }
-	                catch (ExecutionException e1) {
-	                	if (!(e1.getCause() instanceof ClientTransportException)) {
-	                		numberResponses++;
-	                		exception = e1;
-	                	} else {
-	                		e1.printStackTrace();
-	                	}
-	                }
-	                catch (Exception e) {
-	                    System.out.println("Caught execution exception.");
-	                    System.out.print("Cause: ");
-	                    System.out.println(e.getCause());
-	                }
-	                responsesList.remove(r);
-	                break;
-	        	}
-	        }
-		}
-		if(latestTag==-1) {
-			if (exception.getCause() instanceof InvalidKeyException_Exception)
-				throw (InvalidKeyException_Exception) exception.getCause();
-			else if (exception.getCause() instanceof InvalidDomainException_Exception)
-				throw (InvalidDomainException_Exception) exception.getCause();
-			else if (exception.getCause() instanceof InvalidUsernameException_Exception)
-				throw (InvalidUsernameException_Exception) exception.getCause();
-			else if (exception.getCause() instanceof UnknownUsernameDomainException_Exception)
-				throw (UnknownUsernameDomainException_Exception) exception.getCause();
-			else
-				exception.printStackTrace();
+		GetResponseWrapper response = get(getPublicKey(), hashedDomain, hashedUsername);
+		byte[] passwordCiphered = response.getPassword();
+		int wid = response.getWid();
+		try {
+			put(getPublicKey(), hashedDomain, hashedUsername, passwordCiphered, wid);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		
-		//byte[] passwordCiphered = _pm.get(getPublicKey(), hashedDomain, hashedUsername);
-		byte[] passwordCiphered = lastVersionContent;
-				//_pmList.get(0).get(getPublicKey(), hashedDomain, hashedUsername);
+		// check password integrity
 		byte[] password;
 		try{
 			byte[] hashedPassword = decipher(passwordCiphered);

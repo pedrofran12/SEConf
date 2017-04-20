@@ -124,7 +124,7 @@ public class Replication_Test {
 		System.out.println("Kill 1 server");
 		enterToContinue();
 		c.register_user();
-		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz de caralho".getBytes());
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz".getBytes());
 		System.out.println("Restart first killed server");
 		System.out.println("Kill other server");
 		enterToContinue();
@@ -133,6 +133,7 @@ public class Replication_Test {
 		System.out.println("Kill other server");
 		enterToContinue();
 		byte[] passwd = c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
+		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
 		c.close();
 		assertEquals("reborn_pwd", new String(passwd));
 	}
