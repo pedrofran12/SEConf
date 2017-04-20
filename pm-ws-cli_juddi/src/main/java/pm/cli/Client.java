@@ -74,4 +74,27 @@ public class Client {
 		System.out.println("Ciphered Password: "+Base64.getEncoder().encodeToString("facebook.com".getBytes()));
 		System.out.println("Password: "+new String(c.retrieve_password("facebook.com".getBytes(), "pedro".getBytes())));
 	}
+	
+	private pm.ws.Key getPrivateKey() throws Exception{
+	    //Adapted from javaDOC//
+	    
+	    //Get PrivateKey!
+	    KeyStore.ProtectionParameter protParam =
+	            new KeyStore.PasswordProtection(getKeyStorePassword());
+	    
+	    KeyStore ks = getKeyStore();
+	    
+	    KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry)
+	            ks.getEntry(getKeyStoreAlias(), protParam);
+	    
+	    PrivateKey privateKey = pkEntry.getPrivateKey();
+	    
+
+        // Convert PrivateKey to pm.ws.Key
+        pm.ws.Key pk = new pm.ws.Key();
+        pk.setKey(Base64.getEncoder().encodeToString(privateKey.getEncoded()));
+        pk.setAlgorithm(privateKey.getAlgorithm());
+	    
+	    return pk;
+	}
 }
