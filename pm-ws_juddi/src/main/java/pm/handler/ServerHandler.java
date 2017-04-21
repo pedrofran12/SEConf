@@ -86,15 +86,14 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 		String operation = smc.get(MessageContext.WSDL_OPERATION).toString();
 		System.out.println("\nOutbound = " + outbound);
 		System.out.println("Method = " + operation);
-
+		
+		getMessage(smc);
 		try {
 			if (outbound) {
-				getMessage(smc);
-
 				// send write identifier
 				if (operation.endsWith("get")) {
-					int wid = (int) smc.get(WRITE_IDENTIFIER_RESPONSE_PROPERTY);
-					addHeaderSM(smc, HEADER_WID,HEADER_WID_NS,""+wid);
+					String wid = (String) smc.get(WRITE_IDENTIFIER_RESPONSE_PROPERTY);
+					addHeaderSM(smc, HEADER_WID,HEADER_WID_NS, wid);
                 }
 				
 				final byte[] plainBytes = getMessage(smc).getBytes();
@@ -106,10 +105,11 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				
 				byte[] mac = makeMAC(macKey, plainBytes);
 				addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(mac));
+				System.out.println(getMessage(smc));
 			}
 			else {
 				// message that is going to be sent from client to server
-			    getMessage(smc); //required to program to work
+				System.out.println(getMessage(smc));
 			   	
 				//Get DSIGN value
 				String dsign = getHeaderElement(smc, HEADER_DSIGN, HEADER_DSIGN_NS);
@@ -166,7 +166,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
 				// receive write identifier 
                 if (operation.endsWith("put")) {
-	                int wid = Integer.parseInt(getHeaderElement(smc, HEADER_WID, HEADER_WID_NS));
+	                String wid = getHeaderElement(smc, HEADER_WID, HEADER_WID_NS);
 	                smc.put(WRITE_IDENTIFIER_RESPONSE_PROPERTY, wid);
 	                smc.setScope(WRITE_IDENTIFIER_RESPONSE_PROPERTY, Scope.APPLICATION);
                 }
@@ -178,7 +178,6 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 			System.out.println("Continue normal processing...");
 			// e.printStackTrace();
 		}
-		System.out.println(getMessage(smc));
 		System.out.println(String.format("%"+40+"s", "").replace(" ", "="));
 		return true;
 	}

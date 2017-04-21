@@ -8,11 +8,12 @@ public class Triplet extends TripletHeader implements Serializable {
 
 	private byte[] password;
 	private int wid = -1;
+	private int tie = Integer.MIN_VALUE;
 
-	public Triplet(byte[] dmn, byte[] uname, byte[] passwd, int id)
+	public Triplet(byte[] dmn, byte[] uname, byte[] passwd, int id, int tie)
 			throws InvalidPasswordException, InvalidDomainException, InvalidUsernameException {
 		super(dmn, uname);
-		setPassword(passwd, id);
+		setPassword(passwd, id, tie);
 	}
 
 	public byte[] getPassword() {
@@ -22,21 +23,25 @@ public class Triplet extends TripletHeader implements Serializable {
 	public int getWriteId(){
 		return wid;
 	}
+	
+	public int getTieValue() {
+		return tie;
+	}
 
-	public void setPassword(byte[] passwd, int wid) throws InvalidPasswordException {
+	public void setPassword(byte[] passwd, int wid, int tie) throws InvalidPasswordException {
 		if (passwd == null) {
 			throw new InvalidPasswordException();
 		}
-		if(getWriteId() < wid){
+		if(getWriteId() < wid || (getWriteId() == wid && getTieValue() < tie)){
 			password = passwd;
 			this.wid = wid;
+			this.tie = tie;
 		}
 	}
-	
 
 	public Triplet duplicate(){
 		try{
-			return new Triplet(getDomain(), getUsername(), getPassword(), getWriteId());
+			return new Triplet(getDomain(), getUsername(), getPassword(), getWriteId(), getTieValue());
 		}
 		catch(Exception e){
 			return null;

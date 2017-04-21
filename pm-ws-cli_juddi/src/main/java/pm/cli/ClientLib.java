@@ -42,8 +42,7 @@ public class ClientLib extends ClientLibReplicated {
 	private KeyStore _ks;
 	private String _alias;
 	private char[] _password;
-	private int wts = 0;
-
+	
 	public ClientLib(List<PasswordManager> pmList, int f) {
 		super(pmList, f);
 	}
@@ -83,9 +82,15 @@ public class ClientLib extends ClientLibReplicated {
 		byte[] hashedUsername = hash(domain, username);
 		byte[] hashedPassword = passwordHash(password, domain, username);
 		byte[] cipheredPassword = cipher(hashedPassword);
-		int wid = wts++;
+		int wid = -1;
+		try {
+			GetResponseWrapper wrap = get(getPublicKey(), hashedDomain, hashedUsername);
+			wid = wrap.getWid();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
-		put(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword, wid);
+		put(getPublicKey(), hashedDomain, hashedUsername, cipheredPassword, ++wid);
 	}
 
 	public byte[] retrieve_password(byte[] domain, byte[] username)
@@ -103,8 +108,9 @@ public class ClientLib extends ClientLibReplicated {
 		GetResponseWrapper response = get(getPublicKey(), hashedDomain, hashedUsername);
 		byte[] passwordCiphered = response.getPassword();
 		int wid = response.getWid();
+		int tie = response.getTie();
 		try {
-			put(getPublicKey(), hashedDomain, hashedUsername, passwordCiphered, wid);
+			put(getPublicKey(), hashedDomain, hashedUsername, passwordCiphered, wid, tie);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

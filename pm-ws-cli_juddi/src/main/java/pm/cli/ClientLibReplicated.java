@@ -2,7 +2,7 @@ package pm.cli;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
-import java.security.KeyStore;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,13 +28,16 @@ import pm.ws.UnknownUsernameDomainException_Exception;
 
 public class ClientLibReplicated {
 	private static final long WAITING_TIME = 30 * 1000;
+	private static final String WID_SEPARATOR = ":";
 	
 	private final List<PasswordManager> _pmList;
 	private final int number_tolerating_faults;
+	private final int tieBreaker;
 	
 	public ClientLibReplicated(List<PasswordManager> pmList, int nFaults) {
 		_pmList = pmList;
 		number_tolerating_faults = nFaults;
+		tieBreaker = new SecureRandom().nextInt(Integer.MAX_VALUE);
 	}
 	
 	// replicated register
@@ -106,6 +109,15 @@ public class ClientLibReplicated {
 			throws InsufficientResponsesException, InvalidKeyException_Exception,
 			InvalidDomainException_Exception, InvalidUsernameException_Exception,
 			InvalidPasswordException_Exception {
+		put(key, domain, username, password, wid, tieBreaker);
+	}
+	
+	public void put(pm.ws.Key key, byte[] domain, byte[] username, byte[] password, int wid, int tie)
+			throws InsufficientResponsesException, InvalidKeyException_Exception,
+			InvalidDomainException_Exception, InvalidUsernameException_Exception,
+			InvalidPasswordException_Exception {
+		
+		String widForm = wid + WID_SEPARATOR + tie;
 		
 		ArrayList<Response<PutResponse>> responsesList = new ArrayList<Response<PutResponse>>();
 		for(PasswordManager pm : _pmList){
@@ -113,7 +125,7 @@ public class ClientLibReplicated {
 			Map<String, Object> requestContext = bindingProvider.getRequestContext();
 			// put token in request context
 			System.out.printf("put token '%d' on request context%n", wid);
-			requestContext.put(ClientHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY, wid);
+			requestContext.put(ClientHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY, widForm);
 			responsesList.add(pm.putAsync(key, domain, username, password));
 		}
 
@@ -188,6 +200,7 @@ public class ClientLibReplicated {
 		
 		int numberResponses = 0;
         int latestTag = -1;
+        int latestTie = Integer.MIN_VALUE;
         byte[] lastVersionContent = ("").getBytes();
         ExecutionException exception = null;
         long current = System.currentTimeMillis();
@@ -210,11 +223,15 @@ public class ClientLibReplicated {
 	                    System.out.println("Asynchronous call result: " + printHexBinary(r.get().getReturn().getValue()));
 
 	                    // get token from message context
-	                    int wid = (int) responseContext.get(ClientHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY);
+	                    String widForm = (String) responseContext.get(ClientHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY);
+	                    String[] splited = widForm.split(WID_SEPARATOR);
+	                    int wid = Integer.parseInt(splited[0]);
+	                    int tie = Integer.parseInt(splited[1]);
 	                    System.out.printf("got token '%d' from response context%n", wid);
 
-	                    if(wid > latestTag){
+	                    if(wid > latestTag || (wid == latestTag && tie > latestTie)){
 	                    	latestTag = wid;
+	                    	latestTie = tie;
 	                    	lastVersionContent = content;
 	                    }
 	                }
@@ -249,21 +266,26 @@ public class ClientLibReplicated {
 				exception.printStackTrace();
 		}
 		
-		return new GetResponseWrapper(lastVersionContent, latestTag);
+		return new GetResponseWrapper(lastVersionContent, latestTag, latestTie);
 	}
 	
 	public class GetResponseWrapper {
 		private final byte[] password;
 		private final int wid;
-		public GetResponseWrapper(byte[] p, int w) {
+		private final int tie;
+		public GetResponseWrapper(byte[] p, int w, int t) {
 			password = p;
 			wid = w;
+			tie = t;
 		}
 		public byte[] getPassword() {
 			return password;
 		}
 		public int getWid() {
 			return wid;
+		}
+		public int getTie() {
+			return tie;
 		}
 	}
 }

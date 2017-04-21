@@ -1,12 +1,9 @@
 package pm.ws;
 
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.FileHandler;
-import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
@@ -23,8 +20,6 @@ import pm.ws.triplet.TripletStore;
 import utilities.ObjectUtil;
 
 import org.apache.commons.net.util.Base64;
-import org.apache.log4j.FileAppender;
-//import org.apache.log4j.Logger;
 
 
 @WebService(endpointInterface = "pm.ws.PasswordManager")
@@ -32,10 +27,10 @@ import org.apache.log4j.FileAppender;
 public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final String SAVE_STATE_NAME = "./PasswordManager%d.serial";
+	private static final String WID_SEPARATOR = ":";
 	private static final boolean AUTO_REGISTER = true;
 
 	private transient Logger log;
-	private transient FileHandler fh;
 	private int port;
 	private final Map<java.security.Key, TripletStore> password;
 	
@@ -72,12 +67,15 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 			TripletStore ts = getTripletStore(key);
 
 			MessageContext messageContext = webServiceContext.getMessageContext();
-			int wid = (int) messageContext.get(ServerHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY);
-			System.out.printf("PUT() got token '%s' from response context%n", wid);
+			String widForm = (String) messageContext.get(ServerHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY);
+			String[] splited = widForm.split(WID_SEPARATOR);
+            int wid = Integer.parseInt(splited[0]);
+            int tie = Integer.parseInt(splited[1]);
+			System.out.printf("PUT() got token '%d' from response context%n", wid);
 			
-			ts.put(domain, username, password, wid);
+			ts.put(domain, username, password, wid, tie);
 			daemonSaveState();
-			log("put", key, domain, username, password);	
+			log("put", key, domain, username, password);
 		}
 		catch (Exception e) {
 			log("put", e, key, domain, username, password);
@@ -93,9 +91,11 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 			Triplet t = ts.get(domain, username);
 			
 			int wid = t.getWriteId();
+			int tie = t.getTieValue();
+			String widForm = wid + WID_SEPARATOR + tie;
 			System.out.printf("GET() put token '%d' on request context%n", wid);
 			MessageContext messageContext = webServiceContext.getMessageContext();
-			messageContext.put(ServerHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY, wid);
+			messageContext.put(ServerHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY, widForm);
 
 			byte[] result = t.getPassword();
 			log("get", result, key, domain, username, result);
@@ -157,9 +157,8 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	
 	private void setPort(String port) {
 		//Set logger filename
-		//System.setProperty("file.port", port);
-		log = Logger.getLogger(PasswordManagerImpl.class.getName() + port);
-		log.setUseParentHandlers(false);
+		log = Logger.getLogger(PasswordManagerImpl.class.getSimpleName() + port);
+		log.setUseParentHandlers(false); // don't write to console
 		//set privatekey
 		ServerHandler.setPrivateKey(port);
 	}
@@ -182,7 +181,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	
 	private void log(String toPrint){
 		try {
-			FileHandler fh = new FileHandler(PasswordManagerImpl.class.getName() + port + ".out", true);
+			FileHandler fh = new FileHandler(PasswordManagerImpl.class.getSimpleName() + port + ".out", true);
 			SimpleFormatter formatter = new SimpleFormatter();  
 	        fh.setFormatter(formatter);
 	        log.addHandler(fh);

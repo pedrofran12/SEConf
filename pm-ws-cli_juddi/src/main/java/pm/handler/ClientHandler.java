@@ -100,16 +100,14 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
         System.out.println("\nOutbound = " + outbound);
         System.out.println("Method = " + operation+"\n");
 
-        
-        System.out.println(getMessage(smc));
         setServerPublicKey(smc.get(BindingProvider.ENDPOINT_ADDRESS_PROPERTY).toString());
+        getMessage(smc);
         try {
-        	
             if (outbound) {
             	// send write identifier
             	if (operation.endsWith("put")) {
-					int wid = (int) smc.get(WRITE_IDENTIFIER_RESPONSE_PROPERTY);
-					addHeaderSM(smc, HEADER_WID,HEADER_WID_NS,""+wid);
+					String wid = (String) smc.get(WRITE_IDENTIFIER_RESPONSE_PROPERTY);
+					addHeaderSM(smc, HEADER_WID,HEADER_WID_NS, wid);
                 }
             	
             	// Generate MAC key for integrity purposes on the response message
@@ -134,9 +132,11 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 				byte[] cipherDigest = makeSignature(plainBytes);
 
                 addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(cipherDigest));
+                System.out.println(getMessage(smc));
             } 
             else {
                 // message that is going to be sent from server to client
+            	System.out.println(getMessage(smc));
 
                 // Get MAC value
                 String mac = getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS);
@@ -173,7 +173,7 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
             	
             	// receive write identifier
             	if (operation.endsWith("get")) {
-	                int wid = Integer.parseInt(getHeaderElement(smc, HEADER_WID, HEADER_WID_NS));
+	                String wid = getHeaderElement(smc, HEADER_WID, HEADER_WID_NS);
 	                smc.put(WRITE_IDENTIFIER_RESPONSE_PROPERTY, wid);
 	                smc.setScope(WRITE_IDENTIFIER_RESPONSE_PROPERTY, Scope.APPLICATION);
                 }
