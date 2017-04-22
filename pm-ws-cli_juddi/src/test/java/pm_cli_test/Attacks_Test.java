@@ -34,6 +34,7 @@ public class Attacks_Test {
 
 	private static ClientLib c;
 	private static String alias = "client";
+	private static String aliasSymmetric = "clienthmac";
 
 	
 	@BeforeClass
@@ -57,7 +58,7 @@ public class Attacks_Test {
 		
 		
 		c = Client.main(new String[]{uddiName, name, faults});
-		c.init(getKeyStore("KeyStore-adolfo", "adolfo".toCharArray()), "client", "adolfo".toCharArray());
+		c.init(getKeyStore("KeyStore-adolfo", "adolfo".toCharArray()), alias, aliasSymmetric, "adolfo".toCharArray());
 		c.register_user();
 
 	}
@@ -65,8 +66,8 @@ public class Attacks_Test {
 	public static KeyStore getKeyStore(String fileName, char[] passwd) {
 		KeyStore k = null;
 		try {
-			k = KeyStore.getInstance("JKS");
-			InputStream readStream = new FileInputStream("src/main/resources/" + fileName + ".jks");
+			k = KeyStore.getInstance("JCEKS");
+			InputStream readStream = new FileInputStream("src/main/resources/" + fileName + ".jceks");
 			k.load(readStream, passwd);
 			readStream.close();
 		} catch (Exception e) {
@@ -115,7 +116,7 @@ public class Attacks_Test {
 		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
 	}
 	
-	@Test(expected= InvalidPasswordException.class)
+	@Test(expected= Exception.class)
 	public void testClient_change_response() throws Exception {
 		AttackerHandler.setHandler("password-change");
 

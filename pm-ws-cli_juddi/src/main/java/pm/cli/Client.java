@@ -63,14 +63,14 @@ public class Client {
 		// ****** Get Keystore ******
 		/*String alias = "client";
 		char[] password = "benfica".toCharArray();
-		KeyStore ks = KeyStore.getInstance("JKS");
-		InputStream readStream = new FileInputStream("src/main/resources/KeyStore.jks");
+		KeyStore ks = KeyStore.getInstance("JCEKS");
+		InputStream readStream = new FileInputStream("src/main/resources/KeyStore.jceks");
 		ks.load(readStream, password);
 		readStream.close();
 		/*
 		String alias = "selfsigned";
 		char[] password = "password".toCharArray();
-		FileInputStream readStream = new FileInputStream("KeyStore.jks");
+		FileInputStream readStream = new FileInputStream("KeyStore.jceks");
 		
 	    KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
 	    ks.load(readStream, password);

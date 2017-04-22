@@ -79,6 +79,11 @@ public class SecureClient {
 		return key;
 	}
 	
+	public static Key getSymmetricKey(KeyStore keystore, String alias, char[] password) throws Exception {
+		Key key = keystore.getKey(alias, password);
+		return key;
+	}
+	
 	
 	/***********************************
 	 * DIGITAL SIGNATURE

@@ -2,8 +2,13 @@ package pm.cli;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
+import java.io.ByteArrayOutputStream;
+import java.security.Key;
+import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -15,6 +20,8 @@ import com.sun.xml.ws.client.ClientTransportException;
 
 import pm.exception.cli.ClientException;
 import pm.exception.cli.InsufficientResponsesException;
+import pm.exception.cli.InvalidKeyStoreException;
+import pm.exception.cli.InvalidPasswordException;
 import pm.handler.ClientHandler;
 import pm.ws.GetResponse;
 import pm.ws.InvalidDomainException_Exception;
@@ -35,10 +42,20 @@ public class ClientLibReplicated {
 	private final int number_tolerating_faults;
 	private final int tieBreaker;
 	
+	private Key symmetricKey;
+	
 	public ClientLibReplicated(List<PasswordManager> pmList, int nFaults) {
 		_pmList = pmList;
 		number_tolerating_faults = nFaults;
 		tieBreaker = new SecureRandom().nextInt(Integer.MAX_VALUE);
+	}
+	
+	protected void setSymmetricKey(KeyStore keystore, String alias, char[] password) throws InvalidKeyStoreException {
+		try {
+			symmetricKey = SecureClient.getSymmetricKey(keystore, alias, password);
+		} catch (Exception e) {
+			throw new InvalidKeyStoreException();
+		}
 	}
 	
 	// replicated register
@@ -112,9 +129,9 @@ public class ClientLibReplicated {
 			InvalidPasswordException_Exception {
 		
 		// create wid signature
-		String widSignature = makeSignarute(wid, tieBreaker);
+		String widMac = makeMac(wid, tieBreaker, password);
 		
-		String widForm = wid + WID_SEPARATOR + tieBreaker + WID_SEPARATOR + widSignature;
+		String widForm = wid + WID_SEPARATOR + tieBreaker + WID_SEPARATOR + widMac;
 		put(key, domain, username, password, widForm);
 	}
 	
@@ -195,8 +212,8 @@ public class ClientLibReplicated {
 	
 	// replicated get
 	public GetResponseWrapper get(pm.ws.Key key, byte[] domain, byte[] username) throws InsufficientResponsesException,
-			InvalidKeyException_Exception, InvalidDomainException_Exception,
-			InvalidUsernameException_Exception, UnknownUsernameDomainException_Exception {
+			InvalidKeyException_Exception, InvalidDomainException_Exception, InvalidUsernameException_Exception,
+			UnknownUsernameDomainException_Exception, InvalidPasswordException {
 		
 		ArrayList<Response<GetResponse>> responsesList = new ArrayList<Response<GetResponse>>();
 		for(PasswordManager pm : _pmList)
@@ -228,14 +245,14 @@ public class ClientLibReplicated {
 
 	                    // get token from message context
 	                    String widForm = (String) responseContext.get(ClientHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY);
-	                    String[] splited = widForm.split(WID_SEPARATOR);
+	                    String[] splited = widForm.split(WID_SEPARATOR, 3);;
 	                    int wid = Integer.parseInt(splited[0]);
 	                    int tie = Integer.parseInt(splited[1]);
-	                    String widSignature = splited[2];
+	                    String widMac = splited[2];
 	                    
 	                    // verify signature
-	                    if (!verifySignarute(widSignature, wid, tie))
-	                    	throw new Exception("invalid wid signature");
+	                    if (!verifyMac(widMac, wid, tie, content))
+	                    	throw new ExecutionException(new InvalidPasswordException());
 	                    
 	                    System.out.printf("got token '%d' from response context%n", wid);
 
@@ -274,19 +291,35 @@ public class ClientLibReplicated {
 				throw (InvalidUsernameException_Exception) exception.getCause();
 			else if (exception.getCause() instanceof UnknownUsernameDomainException_Exception)
 				throw (UnknownUsernameDomainException_Exception) exception.getCause();
+			else if (exception.getCause() instanceof InvalidPasswordException)
+				throw (InvalidPasswordException) exception.getCause();
 			else
-				exception.printStackTrace();
+				throw new InvalidPasswordException();
 		}
 		
 		return new GetResponseWrapper(lastVersionContent, lastestForm);
 	}
 	
-	private String makeSignarute(int wid, int tie) {
-		return "signature";
+	private String makeMac(int wid, int tie, byte[] password) {
+		try {
+			String toMake = wid + WID_SEPARATOR + tie + WID_SEPARATOR + Base64.getEncoder().encodeToString(password);
+			byte[] bytesForMac = toMake.getBytes();
+			byte[] mac = SecureClient.makeMAC(symmetricKey, bytesForMac);
+			return Base64.getEncoder().encodeToString(mac);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 	
-	private boolean verifySignarute(String signature, int wid, int tie) {
-		return true;
+	private boolean verifyMac(String macString, int wid, int tie, byte[] password) {
+		try {
+			String toMake = wid + WID_SEPARATOR + tie + WID_SEPARATOR + Base64.getEncoder().encodeToString(password);
+			byte[] bytesForMac = toMake.getBytes();
+			byte[] mac = Base64.getDecoder().decode(macString);
+			return SecureClient.verifyMAC(symmetricKey, mac, bytesForMac);
+		} catch (Exception e) {
+			return false;
+		}
 	}
 	
 	public class GetResponseWrapper {

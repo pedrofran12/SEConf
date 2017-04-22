@@ -68,7 +68,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 
 			MessageContext messageContext = webServiceContext.getMessageContext();
 			String widForm = (String) messageContext.get(ServerHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY);
-			String[] splited = widForm.split(WID_SEPARATOR);
+			String[] splited = widForm.split(WID_SEPARATOR, 3);
             int wid = Integer.parseInt(splited[0]);
             int tie = Integer.parseInt(splited[1]);
             String widSignature = splited[2];

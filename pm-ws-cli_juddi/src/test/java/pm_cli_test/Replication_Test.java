@@ -48,6 +48,7 @@ public class Replication_Test {
 
 	private static ClientLib c;
 	private static String alias = "client";
+	private static String aliasSymmetric = "clienthmac";
 
 	@BeforeClass
 	public static void oneTimeSetUp() throws Exception {
@@ -76,8 +77,8 @@ public class Replication_Test {
 	public KeyStore getKeyStore(String fileName, char[] passwd) {
 		KeyStore k = null;
 		try {
-			k = KeyStore.getInstance("JKS");
-			InputStream readStream = new FileInputStream("src/main/resources/" + fileName + ".jks");
+			k = KeyStore.getInstance("JCEKS");
+			InputStream readStream = new FileInputStream("src/main/resources/" + fileName + ".jceks");
 			k.load(readStream, passwd);
 			readStream.close();
 		} catch (Exception e) {
@@ -120,7 +121,7 @@ public class Replication_Test {
 		char[] password = "seconf".toCharArray();
 		KeyStore ks = getKeyStore("KeyStore-seconf", password);
 
-		c.init(ks, alias, password);
+		c.init(ks, alias, aliasSymmetric, password);
 		System.out.println("Kill 1 server");
 		enterToContinue();
 		c.register_user();

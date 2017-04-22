@@ -35,7 +35,7 @@ public class ClientLib extends ClientLibReplicated {
 		super(pmList, f);
 	}
 
-	public void init(KeyStore ks, String alias, char[] password) throws ClientException {
+	public void init(KeyStore ks, String alias, String aliasSymmetric, char[] password) throws ClientException {
 		if (isSessionAlive())
 			throw new AlreadyExistsLoggedUserException();
 		if (ks == null || alias == null || password == null)
@@ -44,6 +44,7 @@ public class ClientLib extends ClientLibReplicated {
 		setKeyStoreAlias(alias);
 		setKeyStorePassword(password);
 		ClientHandler.setHandler(ks, alias, password);
+		setSymmetricKey(ks, aliasSymmetric, password);
 	}
 
 	public void register_user()

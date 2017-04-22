@@ -49,7 +49,7 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
 		String operation = smc.get(MessageContext.WSDL_OPERATION).toString();
 		
-		if(outbound==true){
+		if(outbound){
 			switch (TYPE_OF_ATTACK) {
 			case "dsign-remove":
 				// Remove from Header old DSIGN components
