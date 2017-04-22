@@ -13,6 +13,7 @@ import javax.xml.ws.Response;
 
 import com.sun.xml.ws.client.ClientTransportException;
 
+import pm.exception.cli.ClientException;
 import pm.exception.cli.InsufficientResponsesException;
 import pm.handler.ClientHandler;
 import pm.ws.GetResponse;
@@ -109,22 +110,25 @@ public class ClientLibReplicated {
 			throws InsufficientResponsesException, InvalidKeyException_Exception,
 			InvalidDomainException_Exception, InvalidUsernameException_Exception,
 			InvalidPasswordException_Exception {
-		put(key, domain, username, password, wid, tieBreaker);
+		
+		// create wid signature
+		String widSignature = "signature";
+		
+		String widForm = wid + WID_SEPARATOR + tieBreaker + WID_SEPARATOR + widSignature;
+		put(key, domain, username, password, widForm);
 	}
 	
-	public void put(pm.ws.Key key, byte[] domain, byte[] username, byte[] password, int wid, int tie)
+	public void put(pm.ws.Key key, byte[] domain, byte[] username, byte[] password, String widForm)
 			throws InsufficientResponsesException, InvalidKeyException_Exception,
 			InvalidDomainException_Exception, InvalidUsernameException_Exception,
 			InvalidPasswordException_Exception {
-		
-		String widForm = wid + WID_SEPARATOR + tie;
 		
 		ArrayList<Response<PutResponse>> responsesList = new ArrayList<Response<PutResponse>>();
 		for(PasswordManager pm : _pmList){
 			BindingProvider bindingProvider = (BindingProvider) pm;
 			Map<String, Object> requestContext = bindingProvider.getRequestContext();
 			// put token in request context
-			System.out.printf("put token '%d' on request context%n", wid);
+			System.out.printf("put token '%s' on request context%n", widForm);
 			requestContext.put(ClientHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY, widForm);
 			responsesList.add(pm.putAsync(key, domain, username, password));
 		}
@@ -201,6 +205,7 @@ public class ClientLibReplicated {
 		int numberResponses = 0;
         int latestTag = -1;
         int latestTie = Integer.MIN_VALUE;
+        String lastestForm = latestTag + WID_SEPARATOR + latestTie;
         byte[] lastVersionContent = ("").getBytes();
         ExecutionException exception = null;
         long current = System.currentTimeMillis();
@@ -215,7 +220,6 @@ public class ClientLibReplicated {
 	                try {
 	                	//testar se Resposta e excepcao
 						r.get();
-						numberResponses++;
 		        		// access request context
 		        		Map<String, Object> responseContext = r.getContext();
 
@@ -227,13 +231,21 @@ public class ClientLibReplicated {
 	                    String[] splited = widForm.split(WID_SEPARATOR);
 	                    int wid = Integer.parseInt(splited[0]);
 	                    int tie = Integer.parseInt(splited[1]);
+	                    String widSignature = splited[2];
+	                    
+	                    // verify signature
+	                    // if not correct
+	                    // throw new Exception("invalid wid signature");
+	                    
 	                    System.out.printf("got token '%d' from response context%n", wid);
 
 	                    if(wid > latestTag || (wid == latestTag && tie > latestTie)){
+	                    	lastestForm = widForm;
 	                    	latestTag = wid;
 	                    	latestTie = tie;
 	                    	lastVersionContent = content;
 	                    }
+	                    numberResponses++;
 	                }
 	                catch (ExecutionException e1) {
 	                	if (!(e1.getCause() instanceof ClientTransportException)) {
@@ -266,20 +278,26 @@ public class ClientLibReplicated {
 				exception.printStackTrace();
 		}
 		
-		return new GetResponseWrapper(lastVersionContent, latestTag, latestTie);
+		return new GetResponseWrapper(lastVersionContent, lastestForm);
 	}
 	
 	public class GetResponseWrapper {
 		private final byte[] password;
+		private final String widForm;
 		private final int wid;
 		private final int tie;
-		public GetResponseWrapper(byte[] p, int w, int t) {
+		public GetResponseWrapper(byte[] p, String w) {
 			password = p;
-			wid = w;
-			tie = t;
+			widForm = w;
+			String[] splited = widForm.split(WID_SEPARATOR);
+            wid = Integer.parseInt(splited[0]);
+            tie = Integer.parseInt(splited[1]);
 		}
 		public byte[] getPassword() {
 			return password;
+		}
+		public String getWidForm() {
+			return widForm;
 		}
 		public int getWid() {
 			return wid;

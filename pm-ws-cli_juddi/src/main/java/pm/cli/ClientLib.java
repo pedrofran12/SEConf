@@ -6,35 +6,23 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import java.nio.ByteBuffer;
 import java.security.Key;
 import java.security.KeyStore;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-
-import javax.xml.ws.BindingProvider;
-import javax.xml.ws.Response;
-
-import com.sun.xml.ws.client.ClientTransportException;
 
 import pm.exception.cli.AlreadyExistsLoggedUserException;
 import pm.exception.cli.ClientException;
-import pm.exception.cli.InsufficientResponsesException;
 import pm.exception.cli.InvalidDomainException;
 import pm.exception.cli.InvalidKeyStoreException;
 import pm.exception.cli.InvalidPasswordException;
 import pm.exception.cli.InvalidUsernameException;
 import pm.exception.cli.NoSessionException;
 import pm.handler.ClientHandler;
-import pm.ws.GetResponse;
 import pm.ws.InvalidDomainException_Exception;
 import pm.ws.InvalidKeyException_Exception;
 import pm.ws.InvalidPasswordException_Exception;
 import pm.ws.InvalidUsernameException_Exception;
 import pm.ws.KeyAlreadyExistsException_Exception;
 import pm.ws.PasswordManager;
-import pm.ws.PutResponse;
-import pm.ws.RegisterResponse;
 import pm.ws.UnknownUsernameDomainException_Exception;
 import utilities.ObjectUtil;
 
@@ -107,10 +95,9 @@ public class ClientLib extends ClientLibReplicated {
 		
 		GetResponseWrapper response = get(getPublicKey(), hashedDomain, hashedUsername);
 		byte[] passwordCiphered = response.getPassword();
-		int wid = response.getWid();
-		int tie = response.getTie();
+		String widForm = response.getWidForm();
 		try {
-			put(getPublicKey(), hashedDomain, hashedUsername, passwordCiphered, wid, tie);
+			put(getPublicKey(), hashedDomain, hashedUsername, passwordCiphered, widForm);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

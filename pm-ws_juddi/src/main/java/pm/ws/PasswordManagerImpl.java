@@ -71,9 +71,10 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 			String[] splited = widForm.split(WID_SEPARATOR);
             int wid = Integer.parseInt(splited[0]);
             int tie = Integer.parseInt(splited[1]);
+            String widSignature = splited[2];
 			System.out.printf("PUT() got token '%d' from response context%n", wid);
 			
-			ts.put(domain, username, password, wid, tie);
+			ts.put(domain, username, password, wid, tie, widSignature);
 			daemonSaveState();
 			log("put", key, domain, username, password);
 		}
@@ -92,7 +93,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 			
 			int wid = t.getWriteId();
 			int tie = t.getTieValue();
-			String widForm = wid + WID_SEPARATOR + tie;
+			String widForm = wid + WID_SEPARATOR + tie + WID_SEPARATOR + t.getWidSignature();
 			System.out.printf("GET() put token '%d' on request context%n", wid);
 			MessageContext messageContext = webServiceContext.getMessageContext();
 			messageContext.put(ServerHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY, widForm);

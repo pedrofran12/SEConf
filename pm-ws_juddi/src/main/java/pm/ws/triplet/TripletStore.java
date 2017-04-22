@@ -21,15 +21,15 @@ public class TripletStore implements Serializable {
 		rLock = rrwl.readLock();
 	}
 
-	public void put(byte[] domain, byte[] username, byte[] password, int wid, int tie)
+	public void put(byte[] domain, byte[] username, byte[] password, int wid, int tie, String signature)
 			throws InvalidDomainException, InvalidUsernameException, InvalidPasswordException {
 		wLock.lock();
 		try {
 			Triplet t = getTriplet(domain, username);
 			if (t == null) {
-				store.add(new Triplet(domain, username, password, wid, tie));
+				store.add(new Triplet(domain, username, password, wid, tie, signature));
 			} else {
-				t.setPassword(password, wid, tie);
+				t.setPassword(password, wid, tie, signature);
 			}
 		} catch (InvalidDomainException | InvalidUsernameException | InvalidPasswordException e) {
 			throw e;

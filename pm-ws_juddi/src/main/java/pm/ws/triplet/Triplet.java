@@ -8,12 +8,13 @@ public class Triplet extends TripletHeader implements Serializable {
 
 	private byte[] password;
 	private int wid = -1;
-	private int tie = Integer.MIN_VALUE;
+	private int tie = -1;
+	private String widSignature;
 
-	public Triplet(byte[] dmn, byte[] uname, byte[] passwd, int id, int tie)
+	public Triplet(byte[] dmn, byte[] uname, byte[] passwd, int id, int tie, String signature)
 			throws InvalidPasswordException, InvalidDomainException, InvalidUsernameException {
 		super(dmn, uname);
-		setPassword(passwd, id, tie);
+		setPassword(passwd, id, tie, signature);
 	}
 
 	public byte[] getPassword() {
@@ -28,7 +29,11 @@ public class Triplet extends TripletHeader implements Serializable {
 		return tie;
 	}
 
-	public void setPassword(byte[] passwd, int wid, int tie) throws InvalidPasswordException {
+	public String getWidSignature() {
+		return widSignature;
+	}
+
+	public void setPassword(byte[] passwd, int wid, int tie, String signature) throws InvalidPasswordException {
 		if (passwd == null) {
 			throw new InvalidPasswordException();
 		}
@@ -36,12 +41,14 @@ public class Triplet extends TripletHeader implements Serializable {
 			password = passwd;
 			this.wid = wid;
 			this.tie = tie;
+			widSignature = signature;
 		}
 	}
 
 	public Triplet duplicate(){
 		try{
-			return new Triplet(getDomain(), getUsername(), getPassword(), getWriteId(), getTieValue());
+			return new Triplet(getDomain(), getUsername(), getPassword(),
+					getWriteId(), getTieValue(), getWidSignature());
 		}
 		catch(Exception e){
 			return null;
