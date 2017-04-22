@@ -112,7 +112,7 @@ public class ClientLibReplicated {
 			InvalidPasswordException_Exception {
 		
 		// create wid signature
-		String widSignature = "signature";
+		String widSignature = makeSignarute(wid, tieBreaker);
 		
 		String widForm = wid + WID_SEPARATOR + tieBreaker + WID_SEPARATOR + widSignature;
 		put(key, domain, username, password, widForm);
@@ -234,8 +234,8 @@ public class ClientLibReplicated {
 	                    String widSignature = splited[2];
 	                    
 	                    // verify signature
-	                    // if not correct
-	                    // throw new Exception("invalid wid signature");
+	                    if (!verifySignarute(widSignature, wid, tie))
+	                    	throw new Exception("invalid wid signature");
 	                    
 	                    System.out.printf("got token '%d' from response context%n", wid);
 
@@ -279,6 +279,14 @@ public class ClientLibReplicated {
 		}
 		
 		return new GetResponseWrapper(lastVersionContent, lastestForm);
+	}
+	
+	private String makeSignarute(int wid, int tie) {
+		return "signature";
+	}
+	
+	private boolean verifySignarute(String signature, int wid, int tie) {
+		return true;
 	}
 	
 	public class GetResponseWrapper {
