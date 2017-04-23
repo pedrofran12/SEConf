@@ -394,8 +394,10 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     
     private long generateTimestamp(){
     	String[] hosts = new String[]{
-        		"2.europe.pool.ntp.org",
+    			"ntp1.tecnico.ulisboa.pt",
+    			"ntp2.tecnico.ulisboa.pt",
         		"1.europe.pool.ntp.org",
+        		"2.europe.pool.ntp.org",
         		"0.europe.pool.ntp.org",
         		"0.pt.pool.ntp.org"
         };
