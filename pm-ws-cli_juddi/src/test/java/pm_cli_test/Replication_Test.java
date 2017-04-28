@@ -26,6 +26,7 @@ import pm.cli.Client;
 import pm.cli.ClientLib;
 import pm.exception.cli.AlreadyExistsLoggedUserException;
 import pm.exception.cli.ClientException;
+import pm.exception.cli.InsufficientResponsesException;
 import pm.exception.cli.InvalidDomainException;
 import pm.exception.cli.InvalidKeyStoreException;
 import pm.exception.cli.InvalidUsernameException;
@@ -122,20 +123,30 @@ public class Replication_Test {
 		KeyStore ks = getKeyStore("KeyStore-seconf", password);
 
 		c.init(ks, alias, aliasSymmetric, password);
-		System.out.println("Kill 1 server");
+		System.out.println("\n\n\n\n\nKill 1 server");
 		enterToContinue();
 		c.register_user();
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz".getBytes());
-		System.out.println("Restart first killed server");
+		System.out.println("\n\n\n\n\nRestart first killed server");
 		System.out.println("Kill other server");
 		enterToContinue();
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
-		System.out.println("Restart last killed server");
+		System.out.println("\n\n\n\n\nRestart last killed server");
 		System.out.println("Kill other server");
 		enterToContinue();
 		byte[] passwd = c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
 		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
 		c.close();
 		assertEquals("reborn_pwd", new String(passwd));
+	}
+	
+	@Test(expected = InsufficientResponsesException.class)
+	public void testDelayedMessage() throws Exception {
+		char[] password = "seconf".toCharArray();
+		KeyStore ks = getKeyStore("KeyStore-seconf", password);
+
+		c.init(ks, alias, aliasSymmetric, password);
+		AttackerHandler.setHandler("response-delay");
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz".getBytes());
 	}
 }

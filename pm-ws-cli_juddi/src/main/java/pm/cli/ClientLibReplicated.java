@@ -35,7 +35,7 @@ import pm.ws.RegisterResponse;
 import pm.ws.UnknownUsernameDomainException_Exception;
 
 public class ClientLibReplicated {
-	private static final long WAITING_TIME = 30 * 1000;
+	public static final long WAITING_TIME = 30 * 1000;
 	private static final String WID_SEPARATOR = ":";
 	
 	private final List<PasswordManager> _pmList;
@@ -129,7 +129,7 @@ public class ClientLibReplicated {
 			InvalidPasswordException_Exception {
 		
 		// create wid signature
-		String widMac = makeMac(wid, tieBreaker, password);
+		String widMac = makeMac(wid, tieBreaker, domain, username, password);
 		
 		String widForm = wid + WID_SEPARATOR + tieBreaker + WID_SEPARATOR + widMac;
 		put(key, domain, username, password, widForm);
@@ -251,7 +251,7 @@ public class ClientLibReplicated {
 	                    String widMac = splited[2];
 	                    
 	                    // verify signature
-	                    if (!verifyMac(widMac, wid, tie, content))
+	                    if (!verifyMac(widMac, wid, tie, domain, username, content))
 	                    	throw new ExecutionException(new InvalidPasswordException());
 	                    
 	                    System.out.printf("got token '%d' from response context%n", wid);
@@ -300,10 +300,17 @@ public class ClientLibReplicated {
 		return new GetResponseWrapper(lastVersionContent, lastestForm);
 	}
 	
-	private String makeMac(int wid, int tie, byte[] password) {
+	private byte[] generateFormWidMac(int wid, int tie, byte[]... values) {
+		String toMake = wid + WID_SEPARATOR + tie;
+		for (byte[] value : values) {
+			toMake += WID_SEPARATOR + Base64.getEncoder().encodeToString(value);
+		}
+		return toMake.getBytes();
+	}
+	
+	private String makeMac(int wid, int tie, byte[]... values) {
 		try {
-			String toMake = wid + WID_SEPARATOR + tie + WID_SEPARATOR + Base64.getEncoder().encodeToString(password);
-			byte[] bytesForMac = toMake.getBytes();
+			byte[] bytesForMac = generateFormWidMac(wid, tie, values);
 			byte[] mac = SecureClient.makeMAC(symmetricKey, bytesForMac);
 			return Base64.getEncoder().encodeToString(mac);
 		} catch (Exception e) {
@@ -311,10 +318,9 @@ public class ClientLibReplicated {
 		}
 	}
 	
-	private boolean verifyMac(String macString, int wid, int tie, byte[] password) {
+	private boolean verifyMac(String macString, int wid, int tie, byte[]... values) {
 		try {
-			String toMake = wid + WID_SEPARATOR + tie + WID_SEPARATOR + Base64.getEncoder().encodeToString(password);
-			byte[] bytesForMac = toMake.getBytes();
+			byte[] bytesForMac = generateFormWidMac(wid, tie, values);
 			byte[] mac = Base64.getDecoder().decode(macString);
 			return SecureClient.verifyMAC(symmetricKey, mac, bytesForMac);
 		} catch (Exception e) {

@@ -69,8 +69,8 @@ public class ClientLib extends ClientLibReplicated {
 			throw new InvalidPasswordException();
 		byte[] hashedDomain = hash(domain);
 		byte[] hashedUsername = hash(domain, username);
-		byte[] hashedPassword = passwordHash(password, domain, username);
-		byte[] cipheredPassword = cipher(hashedPassword);
+		//byte[] hashedPassword = passwordHash(password, domain, username);
+		byte[] cipheredPassword = cipher(password);
 		int wid = -1;
 		try {
 			GetResponseWrapper wrap = get(getPublicKey(), hashedDomain, hashedUsername);
@@ -106,11 +106,7 @@ public class ClientLib extends ClientLibReplicated {
 		// check password integrity
 		byte[] password;
 		try{
-			byte[] hashedPassword = decipher(passwordCiphered);
-			password = Arrays.copyOfRange(hashedPassword, 256/Byte.SIZE, hashedPassword.length);
-			if (!Arrays.equals(passwordHash(password, domain, username), hashedPassword)) {
-				throw new InvalidPasswordException();
-			}
+			password = decipher(passwordCiphered);
 		}catch(Exception e){
 			throw new InvalidPasswordException();
 		}

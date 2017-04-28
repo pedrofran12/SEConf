@@ -23,6 +23,8 @@ import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
 import org.w3c.dom.NodeList;
 
+import pm.cli.ClientLibReplicated;
+
 
 @HandlerChain(file = "/handler-chain.xml")
 public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
@@ -97,17 +99,34 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 	    		else
 	    			oldSmc = smc;
 				break;
+				
+		    case "change-wid":
+		    	// 1. remover dsing
+		    	// 2. novo wid
+		    	// 3. recriar dsing
+				break;
 			
 			}
 		}
 		//REQUESTS ARE SENT FROM SERVER TO CLIENT
 		else{
-			if(operation.contains("get") && TYPE_OF_ATTACK.equals("password-change")){
-				System.out.println("»»»»»»»»»»»»»»»»»»»»»");
-				System.out.println(getMessage(smc));
-				setBodyElement(smc, "return");
-				System.out.println(getMessage(smc));
-				System.out.println("»»»»»»»»»»»»»»»»»»»»»");
+			switch (TYPE_OF_ATTACK) {
+				case "response-delay":
+					try {
+						Thread.sleep(ClientLibReplicated.WAITING_TIME + 5000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					break;
+				case "password-change":
+					if(operation.contains("get")) {
+						System.out.println("»»»»»»»»»»»»»»»»»»»»»");
+						System.out.println(getMessage(smc));
+						setBodyElement(smc, "return");
+						System.out.println(getMessage(smc));
+						System.out.println("»»»»»»»»»»»»»»»»»»»»»");
+					}
+					break;
 			}
 				
 		}
