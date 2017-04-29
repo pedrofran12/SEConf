@@ -21,15 +21,15 @@ public class TripletStore implements Serializable {
 		rLock = rrwl.readLock();
 	}
 
-	public void put(byte[] domain, byte[] username, byte[] password)
+	public void put(byte[] domain, byte[] username, byte[] password, int wid, int tie, String mac)
 			throws InvalidDomainException, InvalidUsernameException, InvalidPasswordException {
 		wLock.lock();
 		try {
 			Triplet t = getTriplet(domain, username);
 			if (t == null) {
-				store.add(new Triplet(domain, username, password));
+				store.add(new Triplet(domain, username, password, wid, tie, mac));
 			} else {
-				t.setPassword(password);
+				t.setPassword(password, wid, tie, mac);
 			}
 		} catch (InvalidDomainException | InvalidUsernameException | InvalidPasswordException e) {
 			throw e;
@@ -38,7 +38,7 @@ public class TripletStore implements Serializable {
 		}
 	}
 
-	public byte[] get(byte[] domain, byte[] username)
+	public Triplet get(byte[] domain, byte[] username)
 			throws InvalidDomainException, InvalidUsernameException, UnknownUsernameDomainException {
 		rLock.lock();
 		try {
@@ -46,7 +46,7 @@ public class TripletStore implements Serializable {
 			if (t == null) {
 				throw new UnknownUsernameDomainException();
 			}
-			return t.getPassword();
+			return t.duplicate();
 		} catch (InvalidDomainException | InvalidUsernameException | UnknownUsernameDomainException e) {
 			throw e;
 		} finally {

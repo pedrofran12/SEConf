@@ -1,35 +1,45 @@
 package pm.ws;
 
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
+import javax.annotation.Resource;
 import javax.jws.HandlerChain;
 import javax.jws.WebService;
+import javax.xml.ws.WebServiceContext;
+import javax.xml.ws.handler.MessageContext;
 
 import pm.exception.*;
 import pm.handler.ServerHandler;
+import pm.ws.triplet.Triplet;
 import pm.ws.triplet.TripletStore;
 import utilities.ObjectUtil;
 
 import org.apache.commons.net.util.Base64;
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Logger;
 
 
 @WebService(endpointInterface = "pm.ws.PasswordManager")
 @HandlerChain(file = "/handler-chain.xml")
 public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private static final long serialVersionUID = 1L;
-	private static final String SAVE_STATE_NAME = "./PasswordManager.serial";
-	private transient Logger log;
+	private static final String SAVE_STATE_NAME = "./PasswordManager%d.serial";
+	private static final String WID_SEPARATOR = ":";
+	private static final boolean AUTO_REGISTER = true;
 
+	private transient Logger log;
+	private int port;
 	private final Map<java.security.Key, TripletStore> password;
 	
-	private PasswordManagerImpl() {
+	@Resource
+	private transient WebServiceContext webServiceContext;
+	
+	private PasswordManagerImpl(int port) {
 		password = new HashMap<>();
+		this.port = port;
 	}
 
 	public void register(Key publicKey) throws InvalidKeyException, KeyAlreadyExistsException {
@@ -55,9 +65,18 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 		java.security.Key key = keyToKey(publicKey);
 		try{
 			TripletStore ts = getTripletStore(key);
-			ts.put(domain, username, password);
+
+			MessageContext messageContext = webServiceContext.getMessageContext();
+			String widForm = (String) messageContext.get(ServerHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY);
+			String[] splited = widForm.split(WID_SEPARATOR, 3);
+            int wid = Integer.parseInt(splited[0]);
+            int tie = Integer.parseInt(splited[1]);
+            String widSignature = splited[2];
+			System.out.printf("PUT() got token '%d' from response context%n", wid);
+			
+			ts.put(domain, username, password, wid, tie, widSignature);
 			daemonSaveState();
-			log("put", key, domain, username, password);	
+			log("put", key, domain, username, password);
 		}
 		catch (Exception e) {
 			log("put", e, key, domain, username, password);
@@ -69,10 +88,17 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 			InvalidUsernameException, UnknownUsernameDomainException {
 		java.security.Key key = keyToKey(publicKey);
 		try{
-			if (!password.containsKey(key)) {
-				throw new InvalidKeyException();
-			}
-			byte[] result = password.get(key).get(domain, username);
+			TripletStore ts = getTripletStore(key);
+			Triplet t = ts.get(domain, username);
+			
+			int wid = t.getWriteId();
+			int tie = t.getTieValue();
+			String widForm = wid + WID_SEPARATOR + tie + WID_SEPARATOR + t.getWidSignature();
+			System.out.printf("GET() put token '%d' on request context%n", wid);
+			MessageContext messageContext = webServiceContext.getMessageContext();
+			messageContext.put(ServerHandler.WRITE_IDENTIFIER_RESPONSE_PROPERTY, widForm);
+
+			byte[] result = t.getPassword();
 			log("get", result, key, domain, username, result);
 			return result;
 		}
@@ -84,8 +110,12 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 
 	private TripletStore getTripletStore(java.security.Key k) throws InvalidKeyException {
 		TripletStore ts = password.get(k);
-		if (ts == null)
-			throw new InvalidKeyException();
+		if (ts == null) {
+			if (!AUTO_REGISTER)
+				throw new InvalidKeyException();
+			ts = new TripletStore();
+			password.put(k, ts);
+		}
 		return ts;
 	}
 
@@ -103,7 +133,9 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	}
 
 	private synchronized void saveState() {
-		boolean saved = ObjectUtil.writeObjectFile(SAVE_STATE_NAME, this);
+		String fileName = String.format(SAVE_STATE_NAME, port);
+		boolean saved = ObjectUtil.writeObjectFile(fileName, this);
+		//boolean saved = true;
 		if (saved) {
 			System.out.println(">>> Saved state");
 		} else {
@@ -111,22 +143,23 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 		}
 	}
 
-	public static PasswordManager getInstance() {
-		PasswordManagerImpl pm = ObjectUtil.readObjectFile(SAVE_STATE_NAME, PasswordManagerImpl.class);
+	public static PasswordManager getInstance(int port) {
+		String fileName = String.format(SAVE_STATE_NAME, port);
+		PasswordManagerImpl pm = ObjectUtil.readObjectFile(fileName, PasswordManagerImpl.class);
 		if (pm != null) {
 			System.out.println(">>> Loaded state");
 		} else {
-			pm = new PasswordManagerImpl();
+			pm = new PasswordManagerImpl(port);
 			System.out.println(">>> Created");
 		}
-		pm.setPort("8080");
+		pm.setPort(""+port);
 		return pm;
 	}
 	
 	private void setPort(String port) {
 		//Set logger filename
-		System.setProperty("file.port", port);
-		log = Logger.getLogger(PasswordManagerImpl.class.getName() + port);
+		log = Logger.getLogger(PasswordManagerImpl.class.getSimpleName() + port);
+		log.setUseParentHandlers(false); // don't write to console
 		//set privatekey
 		ServerHandler.setPrivateKey(port);
 	}
@@ -148,7 +181,17 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	}
 	
 	private void log(String toPrint){
-		log.info(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + " : " + toPrint);
+		try {
+			FileHandler fh = new FileHandler(PasswordManagerImpl.class.getSimpleName() + port + ".out", true);
+			SimpleFormatter formatter = new SimpleFormatter();  
+	        fh.setFormatter(formatter);
+	        log.addHandler(fh);
+			log.info(toPrint);
+			fh.flush();
+			fh.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private String logToString(String methodName, java.security.Key key, byte[]... args){

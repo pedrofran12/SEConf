@@ -41,6 +41,7 @@ import org.w3c.dom.NodeList;
 
 @HandlerChain(file = "/handler-chain.xml")
 public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
+	public static final String WRITE_IDENTIFIER_RESPONSE_PROPERTY = "write.identifer.property";
 
 	public static final String HEADER_DSIGN = "dsign";
 	public static final String HEADER_DSIGN_NS = "urn:dsign";
@@ -57,8 +58,12 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
     public static final String HEADER_TIMESTAMP = "timestamp";
     public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
 
+
     public static final String MAC_KEY_REQUEST_PROPERTY = "mac.key.request.property";
 	
+    public static final String HEADER_WID = "writeid";
+    public static final String HEADER_WID_NS = "urn:writeid";
+
 	private static KeyStore _ks;
 	private static String _alias;
 	private static char[] _password;
@@ -95,12 +100,16 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
         System.out.println("\nOutbound = " + outbound);
         System.out.println("Method = " + operation+"\n");
 
-        
-        System.out.println(getMessage(smc));
         setServerPublicKey(smc.get(BindingProvider.ENDPOINT_ADDRESS_PROPERTY).toString());
+        getMessage(smc);
         try {
-        	
             if (outbound) {
+            	// send write identifier
+            	if (operation.endsWith("put")) {
+					String wid = (String) smc.get(WRITE_IDENTIFIER_RESPONSE_PROPERTY);
+					addHeaderSM(smc, HEADER_WID,HEADER_WID_NS, wid);
+                }
+            	
             	// Generate MAC key for integrity purposes on the response message
             	byte[] macKey = generateMacKey();
                 addHeaderSM(smc, HEADER_MAC_KEY, HEADER_MAC_KEY_NS, printHexBinary(cipher(macKey)));
@@ -123,9 +132,11 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 				byte[] cipherDigest = makeSignature(plainBytes);
 
                 addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(cipherDigest));
+                System.out.println(getMessage(smc));
             } 
             else {
                 // message that is going to be sent from server to client
+            	System.out.println(getMessage(smc));
 
                 // Get MAC value
                 String mac = getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS);
@@ -159,6 +170,13 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
             	if (!result) {
             	   return false;
             	}
+            	
+            	// receive write identifier
+            	if (operation.endsWith("get")) {
+	                String wid = getHeaderElement(smc, HEADER_WID, HEADER_WID_NS);
+	                smc.put(WRITE_IDENTIFIER_RESPONSE_PROPERTY, wid);
+	                smc.setScope(WRITE_IDENTIFIER_RESPONSE_PROPERTY, Scope.APPLICATION);
+                }
             }
         } catch (Exception e) {
             System.out.print("Caught exception in handleMessage: ");
@@ -172,8 +190,47 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 
 	@Override
 	public boolean handleFault(SOAPMessageContext smc) {
-		// TODO Auto-generated method stub
-		return false;
+		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
+		if (outbound) return true;
+		
+		System.out.println("\n\nFault detected:");
+		System.out.println(getMessage(smc));
+		
+		try {
+	        // Get MAC value
+	        String mac = getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS);
+	
+	        // SOAP Message does not have MAC
+	    	if (mac == null)
+	    	    return false;
+	
+	        // Remove from Header MAC components
+	    	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
+	    	NodeList nl = header.getChildNodes();
+	    	for (int i = 0; i < nl.getLength(); i++) {
+	    	    if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
+	    	        header.removeChild(nl.item(i));
+	    	    }
+	    	}
+	    	header.normalize();
+	
+	        // SOAP Message in bytes without MAC from Header
+	    	byte[] plainBytes = getMessage(smc).getBytes();
+	
+	        // SEGURANCA : MAC
+	    	// make MAC
+	    	byte[] cipherDigest = parseHexBinary(mac);
+	
+	        // verify the MAC
+	    	byte[] macKey = (byte[]) smc.get(MAC_KEY_REQUEST_PROPERTY);
+	    	boolean result = verifyMAC(macKey, cipherDigest, plainBytes);
+	    	System.out.println("\nMAC is " + (result ? "right" : "wrong"));
+	
+	    	return result;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	@Override
@@ -252,7 +309,7 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 
 			// check header
 			if (sh == null) {
-				System.out.println("Header not found.");
+				System.out.println("Header not found: " + header);
 				return null;
 			}
 
@@ -261,7 +318,7 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 			Iterator it = sh.getChildElements(name);
 			// check header element
 			if (!it.hasNext()) {
-				System.out.println("Header element not found.");
+				System.out.println("Header element not found: " + headerNS);
 				return null;
 			}
 			SOAPElement element = (SOAPElement) it.next();
@@ -287,7 +344,14 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 
     //return number of milliseconds since January 1, 1970, 00:00:00 GMT
     private long generateTimestamp(){
-        String[] hosts = new String[]{"0.pt.pool.ntp.org","1.europe.pool.ntp.org","0.europe.pool.ntp.org","2.europe.pool.ntp.org"};
+        String[] hosts = new String[]{
+    			"ntp1.tecnico.ulisboa.pt",
+    			"ntp2.tecnico.ulisboa.pt",
+        		"1.europe.pool.ntp.org",
+        		"2.europe.pool.ntp.org",
+        		"0.europe.pool.ntp.org",
+        		"0.pt.pool.ntp.org"
+        };
         TimeInfo ti = null;
         
         NTPUDPClient timeClient = new NTPUDPClient();

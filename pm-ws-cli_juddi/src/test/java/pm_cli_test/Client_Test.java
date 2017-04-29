@@ -3,16 +3,23 @@ package pm_cli_test;
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.xml.registry.JAXRException;
 import javax.xml.ws.BindingProvider;
 
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.maven.project.MavenProject;
 import org.junit.*;
 
+import pm.cli.Client;
 import pm.cli.ClientLib;
 import pm.exception.cli.AlreadyExistsLoggedUserException;
 import pm.exception.cli.ClientException;
@@ -38,34 +45,38 @@ public class Client_Test {
 
 	private static ClientLib c;
 	private static String alias = "client";
+	private static String aliasSymmetric = "clienthmac";
 
 
 	@BeforeClass
-	public static void oneTimeSetUp() throws JAXRException {
-		// ********** Connection to Server ********** //
-		String url = "http://localhost:8080/pm-ws/endpoint";
-		String name = "pm-ws";
-		String uddiURL = "http://localhost:9090";
-
-		UDDINaming uddiNaming = new UDDINaming(uddiURL);
-		String endpointAddress = uddiNaming.lookup(name);
-		PasswordManagerImplService service = new PasswordManagerImplService();
-		PasswordManager port = service.getPasswordManagerImplPort();
-		BindingProvider bindingProvider = (BindingProvider) port;
-		Map<String, Object> requestContext = bindingProvider.getRequestContext();
-		requestContext.put(ENDPOINT_ADDRESS_PROPERTY, endpointAddress);
-		// ********** Open Keystore **************** //
-
-		// ****************************
-		c = new ClientLib(port);
+	public static void oneTimeSetUp() throws Exception {
+		
+		Model model = null;
+		FileReader reader = null;
+		MavenXpp3Reader mavenreader = new MavenXpp3Reader();
+		try {
+		    File pomfile = new File("pom.xml");
+			reader = new FileReader(pomfile );
+		    model = mavenreader.read(reader);
+		    model.setPomFile(pomfile);
+		}catch(Exception ex){}
+		MavenProject project = new MavenProject(model);
+		
+		Properties p = project.getProperties();
+		String uddiName = p.getProperty("uddi.url");
+		String name = p.getProperty("ws.name");
+		String faults = p.getProperty("ws.number.faults");
+		
+		
+		c = Client.main(new String[]{uddiName, name, faults});
 
 	}
 
 	public KeyStore getKeyStore(String fileName, char[] passwd) {
 		KeyStore k = null;
 		try {
-			k = KeyStore.getInstance("JKS");
-			InputStream readStream = new FileInputStream("src/main/resources/" + fileName + ".jks");
+			k = KeyStore.getInstance("JCEKS");
+			InputStream readStream = new FileInputStream("src/main/resources/" + fileName + ".jceks");
 			k.load(readStream, passwd);
 			readStream.close();
 		} catch (Exception e) {
@@ -94,7 +105,7 @@ public class Client_Test {
 		char[] password = "seconf".toCharArray();
 		KeyStore ks = getKeyStore("KeyStore-seconf", password);
 
-		c.init(ks, alias, password);
+		c.init(ks, alias, aliasSymmetric, password);
 		c.register_user();
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
 		byte[] passwd = c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
@@ -106,14 +117,14 @@ public class Client_Test {
 	public void testInvalidInit() throws ClientException {
 		char[] password = "benfica".toCharArray();
 		KeyStore ks = getKeyStore("KeyStore", "benfica".toCharArray());
-		c.init(ks, alias, password);
-		c.init(null, null, null);
+		c.init(ks, alias, aliasSymmetric, password);
+		c.init(null, null, null, null);
 	}
 
 	@Test(expected = InvalidKeyStoreException.class) // A corrigir
 	public void testRegisterUser_InvalidKey()
 			throws ClientException, InvalidKeyException_Exception, KeyAlreadyExistsException_Exception {
-		c.init(null, alias, "hi".toCharArray());
+		c.init(null, alias, aliasSymmetric, "hi".toCharArray());
 		c.register_user();
 	}
 
@@ -122,7 +133,7 @@ public class Client_Test {
 			throws ClientException, InvalidKeyException_Exception, KeyAlreadyExistsException_Exception {
 		char[] password = "reborn".toCharArray();
 		KeyStore ks = getKeyStore("KeyStore-reborn", password);
-		c.init(ks, alias, password);
+		c.init(ks, alias, aliasSymmetric, password);
 		c.register_user();
 		c.register_user();
 	}
@@ -132,7 +143,7 @@ public class Client_Test {
 			InvalidDomainException_Exception, InvalidUsernameException_Exception, InvalidPasswordException_Exception {
 		char[] password = "luisrafael".toCharArray();
 		KeyStore ks = getKeyStore("KeyStore-luisrafael", password);
-		c.init(ks, alias, password);
+		c.init(ks, alias, aliasSymmetric, password);
 		c.save_password(null, "reborn".getBytes(), "reborn_pwd".getBytes());
 	}
 
@@ -141,7 +152,7 @@ public class Client_Test {
 			InvalidDomainException_Exception, InvalidUsernameException_Exception, InvalidPasswordException_Exception {
 		char[] password = "pedrofran".toCharArray();
 		KeyStore ks = getKeyStore("KeyStore-pedrofran", password);
-		c.init(ks, alias, password);
+		c.init(ks, alias, aliasSymmetric, password);
 		c.save_password("facebook.com".getBytes(), null, "reborn_pwd".getBytes());
 	}
 
@@ -151,7 +162,7 @@ public class Client_Test {
 			InvalidPasswordException_Exception, UnknownUsernameDomainException_Exception {
 		char[] password = "augusto".toCharArray();
 		KeyStore ks = getKeyStore("KeyStore-augusto", password);
-		c.init(ks, alias, password);
+		c.init(ks, alias, aliasSymmetric, password);
 		c.register_user();
 		c.save_password("facebook.com".getBytes(), "augusto".getBytes(), "augusto".getBytes());
 
@@ -164,7 +175,7 @@ public class Client_Test {
 			UnknownUsernameDomainException_Exception, InvalidPasswordException_Exception {
 		char[] password = "alejandro".toCharArray();
 		KeyStore ks = getKeyStore("KeyStore-alejandro", password);
-		c.init(ks, alias, password);
+		c.init(ks, alias, aliasSymmetric, password);
 		c.register_user();
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
 		c.retrieve_password("facebook.com".getBytes(), null);

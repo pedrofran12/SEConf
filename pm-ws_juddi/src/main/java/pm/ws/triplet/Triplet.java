@@ -7,21 +7,51 @@ public class Triplet extends TripletHeader implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private byte[] password;
+	private int wid = -1;
+	private int tie = -1;
+	private String widMac;
 
-	public Triplet(byte[] dmn, byte[] uname, byte[] passwd)
+	public Triplet(byte[] dmn, byte[] uname, byte[] passwd, int id, int tie, String mac)
 			throws InvalidPasswordException, InvalidDomainException, InvalidUsernameException {
 		super(dmn, uname);
-		setPassword(passwd);
+		setPassword(passwd, id, tie, mac);
 	}
 
 	public byte[] getPassword() {
 		return password;
 	}
+	
+	public int getWriteId(){
+		return wid;
+	}
+	
+	public int getTieValue() {
+		return tie;
+	}
 
-	public void setPassword(byte[] passwd) throws InvalidPasswordException {
+	public String getWidSignature() {
+		return widMac;
+	}
+
+	public void setPassword(byte[] passwd, int wid, int tie, String mac) throws InvalidPasswordException {
 		if (passwd == null) {
 			throw new InvalidPasswordException();
 		}
-		password = passwd;
+		if(getWriteId() < wid || (getWriteId() == wid && getTieValue() < tie)){
+			password = passwd;
+			this.wid = wid;
+			this.tie = tie;
+			widMac = mac;
+		}
+	}
+
+	public Triplet duplicate(){
+		try{
+			return new Triplet(getDomain(), getUsername(), getPassword(),
+					getWriteId(), getTieValue(), getWidSignature());
+		}
+		catch(Exception e){
+			return null;
+		}
 	}
 }

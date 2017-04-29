@@ -1,20 +1,21 @@
 package pm_cli_test;
 
-import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.security.KeyStore;
-import java.util.Map;
+import java.util.Properties;
 
-import javax.xml.registry.JAXRException;
-import javax.xml.ws.BindingProvider;
-
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.maven.project.MavenProject;
 import org.junit.*;
 import static org.junit.Assert.*;
 
-
+import pm.cli.Client;
 import pm.cli.ClientLib;
 import pm.exception.cli.ClientException;
 import pm.exception.cli.InvalidPasswordException;
@@ -33,26 +34,31 @@ public class Attacks_Test {
 
 	private static ClientLib c;
 	private static String alias = "client";
+	private static String aliasSymmetric = "clienthmac";
 
 	
 	@BeforeClass
-	public static void oneTimeSetUp() throws JAXRException, ClientException, InvalidKeyException_Exception, KeyAlreadyExistsException_Exception {
-		// ********** Connection to Server ********** //
-		String url = "http://localhost:8080/pm-ws/endpoint";
-		String name = "pm-ws";
-		String uddiURL = "http://localhost:9090";
-
-		UDDINaming uddiNaming = new UDDINaming(uddiURL);
-		String endpointAddress = uddiNaming.lookup(name);
-		PasswordManagerImplService service = new PasswordManagerImplService();
-		PasswordManager port = service.getPasswordManagerImplPort();
-		BindingProvider bindingProvider = (BindingProvider) port;
-		Map<String, Object> requestContext = bindingProvider.getRequestContext();
-		requestContext.put(ENDPOINT_ADDRESS_PROPERTY, endpointAddress);
-		// ****************************
+	public static void oneTimeSetUp() throws Exception {
 		
-		c = new ClientLib(port);
-		c.init(getKeyStore("KeyStore-adolfo", "adolfo".toCharArray()), "client", "adolfo".toCharArray());
+		Model model = null;
+		FileReader reader = null;
+		MavenXpp3Reader mavenreader = new MavenXpp3Reader();
+		try {
+		    File pomfile = new File("pom.xml");
+			reader = new FileReader(pomfile );
+		    model = mavenreader.read(reader);
+		    model.setPomFile(pomfile);
+		}catch(Exception ex){}
+		MavenProject project = new MavenProject(model);
+		
+		Properties p = project.getProperties();
+		String uddiName = p.getProperty("uddi.url");
+		String name = p.getProperty("ws.name");
+		String faults = p.getProperty("ws.number.faults");
+		
+		
+		c = Client.main(new String[]{uddiName, name, faults});
+		c.init(getKeyStore("KeyStore-adolfo", "adolfo".toCharArray()), alias, aliasSymmetric, "adolfo".toCharArray());
 		c.register_user();
 
 	}
@@ -60,8 +66,8 @@ public class Attacks_Test {
 	public static KeyStore getKeyStore(String fileName, char[] passwd) {
 		KeyStore k = null;
 		try {
-			k = KeyStore.getInstance("JKS");
-			InputStream readStream = new FileInputStream("src/main/resources/" + fileName + ".jks");
+			k = KeyStore.getInstance("JCEKS");
+			InputStream readStream = new FileInputStream("src/main/resources/" + fileName + ".jceks");
 			k.load(readStream, passwd);
 			readStream.close();
 		} catch (Exception e) {
@@ -110,7 +116,7 @@ public class Attacks_Test {
 		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
 	}
 	
-	@Test(expected= InvalidPasswordException.class)
+	@Test(expected= Exception.class)
 	public void testClient_change_response() throws Exception {
 		AttackerHandler.setHandler("password-change");
 

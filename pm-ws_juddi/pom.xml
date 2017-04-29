@@ -98,12 +98,6 @@
 			<artifactId>commons-net</artifactId>
 			<version>3.4</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/log4j/log4j -->
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
-		</dependency>
 	</dependencies>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -115,8 +109,11 @@
 		<mainclass>pm.ws.PasswordManagerMain</mainclass>
 
 		<uddi.url>http://localhost:9090</uddi.url>
-		<ws.name>pm-ws</ws.name>
-		<ws.url>http://localhost:8080/pm-ws/endpoint</ws.url>
+		<ws.name>pm-ws-%d</ws.name>
+		<ws.url>http://localhost:%d/pm-ws/endpoint</ws.url>
+		<ws.firstport>8080</ws.firstport>
+		<ws.faults>1</ws.faults>
+		
 	</properties>
 
 	<build>
@@ -140,6 +137,8 @@
 						<argument>${uddi.url}</argument>
 						<argument>${ws.name}</argument>
 						<argument>${ws.url}</argument>
+						<argument>${ws.firstport}</argument>
+						<argument>${ws.faults}</argument>
 					</arguments>
 				</configuration>
 			</plugin>
