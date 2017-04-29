@@ -15,6 +15,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Date;
@@ -28,6 +29,7 @@ import javax.xml.ws.handler.soap.*;
 
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
+import org.omg.Messaging.SyncScopeHelper;
 import org.w3c.dom.NodeList;
 
 import pm.ws.SecureServer;
@@ -176,7 +178,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 			System.out.print("Caught exception in handleMessage: ");
 			System.out.println(e);
 			System.out.println("Continue normal processing...");
-			// e.printStackTrace();
+			e.printStackTrace();
 		}
 		System.out.println(String.format("%"+40+"s", "").replace(" ", "="));
 		return true;
@@ -264,7 +266,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
 			// check header
 			if (sh == null) {
-				System.out.println("Header not found.");
+				System.out.println("Header not found: " + header);
 				return null;
 			}
 
@@ -273,7 +275,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 			Iterator it = sh.getChildElements(name);
 			// check header element
 			if (!it.hasNext()) {
-				System.out.println("Header element not found.");
+				System.out.println("Header element not found: " + headerNS);
 				return null;
 			}
 			SOAPElement element = (SOAPElement) it.next();
@@ -386,7 +388,8 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
     }
     
     private void checkNonces(long timeGenerated){
-        for(int j : nonceMap.keySet()){
+    	Set<Integer> nonces = new HashSet<>(nonceMap.keySet());
+        for(int j : nonces) {
             if(!compareTime(timeGenerated,nonceMap.get(j),NONCE_TIMEOUT))
                 nonceMap.remove(j);
         }

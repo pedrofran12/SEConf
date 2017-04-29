@@ -1,6 +1,10 @@
 package pm.handler;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.Key;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Iterator;
@@ -24,6 +28,8 @@ import org.apache.commons.net.ntp.TimeInfo;
 import org.w3c.dom.NodeList;
 
 import pm.cli.ClientLibReplicated;
+import pm.cli.SecureClient;
+import pm.exception.cli.InvalidKeyStoreException;
 
 
 @HandlerChain(file = "/handler-chain.xml")
@@ -37,6 +43,9 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
     
     public static final String HEADER_TIMESTAMP = "timestamp";
     public static final String HEADER_TIMESTAMP_NS = "urn:timestamp";
+    
+    public static final String HEADER_WID = "writeid";
+    public static final String HEADER_WID_NS = "urn:writeid";
 
 	private static String TYPE_OF_ATTACK = "";	
 	
@@ -51,6 +60,7 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
 		String operation = smc.get(MessageContext.WSDL_OPERATION).toString();
 		
+		getMessage(smc);
 		if(outbound){
 			switch (TYPE_OF_ATTACK) {
 			case "dsign-remove":
@@ -100,10 +110,52 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 	    			oldSmc = smc;
 				break;
 				
-		    case "change-wid":
-		    	// 1. remover dsing
-		    	// 2. novo wid
-		    	// 3. recriar dsing
+		    case "change-wid-value":
+		    case "change-wid-force":
+		    case "tie-break-high":
+		    case "tie-break-low":
+		    	if (!operation.endsWith("put")) return true;
+		    	try {
+		    		String wid = getHeaderElement(smc, HEADER_WID, HEADER_WID_NS);
+			    	// 1. remover dsing
+			    	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
+					NodeList nl = header.getChildNodes();
+					for (int i = 0; i < nl.getLength(); i++) {
+						if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN) ||
+								nl.item(i).getNodeName().equals("d:" + HEADER_WID)) {
+							header.removeChild(nl.item(i));
+						}
+					}
+					header.normalize();
+			    	// 2. novo wid
+					if (TYPE_OF_ATTACK.equals("change-wid-force")) {
+						wid = "1000:" + wid.split(":", 2)[1];
+					} else {
+						byte[] domain = Base64.getDecoder().decode(getBodyElement(smc, "arg1").getBytes());
+						byte[] username = Base64.getDecoder().decode(getBodyElement(smc, "arg2").getBytes());
+						byte[] password = Base64.getDecoder().decode(getBodyElement(smc, "arg3").getBytes());
+						int i = 0;
+						int t = 618276;
+						if (TYPE_OF_ATTACK.startsWith("tie-break")) {
+							t = TYPE_OF_ATTACK.endsWith("high") ? Integer.MAX_VALUE : -1;
+							i = Integer.parseInt(wid.split(":", 2)[0]) - 1;
+						}
+						String mac = makeMac(i, t, domain, username, password);
+						wid = i + ":" + t + ":" + mac;
+					}
+					addHeaderSM(smc, HEADER_WID,HEADER_WID_NS, wid);
+			    	// 3. recriar dsing
+					final String plainText = getMessage(smc);
+	                final byte[] plainBytes = plainText.getBytes();
+
+	                // SEGURANCA : DSIGN
+	                // make DSIGN
+					byte[] cipherDigest = makeSignature(plainBytes);
+
+	                addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(cipherDigest));
+		    	} catch (Exception e) {
+		    		e.printStackTrace();
+		    	}
 				break;
 			
 			}
@@ -216,7 +268,7 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 
 			// check header
 			if (sh == null) {
-				System.out.println("Header not found.");
+				System.out.println("Header not found: " + header);
 				return null;
 			}
 
@@ -225,7 +277,7 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 			Iterator it = sh.getChildElements(name);
 			// check header element
 			if (!it.hasNext()) {
-				System.out.println("Header element not found.");
+				System.out.println("Header element not found: " + headerNS);
 				return null;
 			}
 			SOAPElement element = (SOAPElement) it.next();
@@ -310,5 +362,82 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 				findAttributeRecursive(se, tag);
 			}
 		}
+	}
+	
+	private String makeMac(int wid, int tie, byte[]... values) {
+		try {
+			String toMake = wid + ":" + tie;
+			for (byte[] value : values) {
+				toMake += ":" + Base64.getEncoder().encodeToString(value);
+			}
+			byte[] bytesForMac = toMake.getBytes();
+			byte[] mac = SecureClient.makeMAC(getSymetricKey(), bytesForMac);
+			return Base64.getEncoder().encodeToString(mac);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	private Key getSymetricKey() {
+		String alias = "clienthmac";
+		char[] password = "seconf".toCharArray();
+		KeyStore keystore = getKeyStore("KeyStore-seconf", password);
+		try {
+			return SecureClient.getSymmetricKey(keystore, alias, password);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	public KeyStore getKeyStore(String fileName, char[] passwd) {
+		KeyStore k = null;
+		try {
+			k = KeyStore.getInstance("JCEKS");
+			InputStream readStream = new FileInputStream("src/main/resources/" + fileName + ".jceks");
+			k.load(readStream, passwd);
+			readStream.close();
+		} catch (Exception e) {
+			System.out.println("Test Failed");
+			e.printStackTrace();
+		}
+		return k;
+	}
+	
+	private byte[] makeSignature(byte[] data) throws Exception{
+		String _alias = "client";
+		char[] _password = "seconf".toCharArray();
+		KeyStore _ks = getKeyStore("KeyStore-seconf", _password);
+		return SecureClient.makeSignature(_ks, _alias, _password, data);
+	}
+	
+	private String getBodyElement(SOAPMessageContext smc, String tag) {
+		try {
+			// get SOAP envelope header
+			SOAPMessage msg = smc.getMessage();
+			SOAPPart sp = msg.getSOAPPart();
+			SOAPEnvelope se = sp.getEnvelope();
+			SOAPBody sh = se.getBody();
+			return findAttributeRecursive2(sh, tag);
+		} catch (Exception e) {
+			System.out.println("Erro getHeaderElement");
+		}
+		return null;
+	}
+	
+	private String findAttributeRecursive2(SOAPElement element, String tag) {
+		NodeList nl = element.getChildNodes();
+		for (int i = 0; i < nl.getLength(); i++) {
+			if (nl.item(i).getNodeType() == Node.ELEMENT_NODE) {
+				SOAPElement se = (SOAPElement) nl.item(i);
+				if (se.getNodeName().equals(tag)) {
+					return se.getValue();
+				}
+				String atr = findAttributeRecursive2(se, tag);
+				if (atr != null) {
+					return atr;
+				}
+			}
+		}
+		return null;
 	}
 }

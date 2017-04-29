@@ -29,6 +29,7 @@ import pm.exception.cli.ClientException;
 import pm.exception.cli.InsufficientResponsesException;
 import pm.exception.cli.InvalidDomainException;
 import pm.exception.cli.InvalidKeyStoreException;
+import pm.exception.cli.InvalidPasswordException;
 import pm.exception.cli.InvalidUsernameException;
 import pm.handler.AttackerHandler;
 import pm.ws.InvalidDomainException_Exception;
@@ -148,5 +149,61 @@ public class Replication_Test {
 		c.init(ks, alias, aliasSymmetric, password);
 		AttackerHandler.setHandler("response-delay");
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz".getBytes());
+	}
+	
+	@Test
+	public void testChangeWidValue() throws Exception {
+		char[] password = "seconf".toCharArray();
+		KeyStore ks = getKeyStore("KeyStore-seconf", password);
+
+		c.init(ks, alias, aliasSymmetric, password);
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz2".getBytes());
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz1".getBytes());
+		AttackerHandler.setHandler("change-wid-value");
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz".getBytes());
+		AttackerHandler.setHandler("");
+		byte[] passwd = c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
+		assertEquals("arroz1", new String(passwd));
+	}
+	
+	//@Test(expected = InvalidPasswordException_Exception.class) // <- with dsign
+	@Test(expected = InvalidPasswordException.class) // <- with mac
+	public void testChangeWidForce() throws Exception {
+		char[] password = "seconf".toCharArray();
+		KeyStore ks = getKeyStore("KeyStore-seconf", password);
+
+		c.init(ks, alias, aliasSymmetric, password);
+		AttackerHandler.setHandler("change-wid-force");
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz".getBytes());
+		AttackerHandler.setHandler("");
+		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes()); // <- with mac
+	}
+	
+	@Test
+	public void testTieBreakHigh() throws Exception {
+		char[] password = "seconf".toCharArray();
+		KeyStore ks = getKeyStore("KeyStore-seconf", password);
+
+		c.init(ks, alias, aliasSymmetric, password);
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz1".getBytes());
+		AttackerHandler.setHandler("tie-break-high");
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz".getBytes());
+		AttackerHandler.setHandler("");
+		byte[] passwd = c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
+		assertEquals("arroz", new String(passwd));
+	}
+	
+	@Test
+	public void testTieBreakLow() throws Exception {
+		char[] password = "seconf".toCharArray();
+		KeyStore ks = getKeyStore("KeyStore-seconf", password);
+
+		c.init(ks, alias, aliasSymmetric, password);
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz1".getBytes());
+		AttackerHandler.setHandler("tie-break-low");
+		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "arroz".getBytes());
+		AttackerHandler.setHandler("");
+		byte[] passwd = c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
+		assertEquals("arroz1", new String(passwd));
 	}
 }

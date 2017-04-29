@@ -270,7 +270,7 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 
 			// check header
 			if (sh == null) {
-				System.out.println("Header not found.");
+				System.out.println("Header not found: " + header);
 				return null;
 			}
 
@@ -279,7 +279,7 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 			Iterator it = sh.getChildElements(name);
 			// check header element
 			if (!it.hasNext()) {
-				System.out.println("Header element not found.");
+				System.out.println("Header element not found: " + headerNS);
 				return null;
 			}
 			SOAPElement element = (SOAPElement) it.next();
