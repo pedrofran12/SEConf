@@ -190,8 +190,47 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 
 	@Override
 	public boolean handleFault(SOAPMessageContext smc) {
-		// TODO Auto-generated method stub
-		return false;
+		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
+		if (outbound) return true;
+		
+		System.out.println("\n\nFault detected:");
+		System.out.println(getMessage(smc));
+		
+		try {
+	        // Get MAC value
+	        String mac = getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS);
+	
+	        // SOAP Message does not have MAC
+	    	if (mac == null)
+	    	    return false;
+	
+	        // Remove from Header MAC components
+	    	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
+	    	NodeList nl = header.getChildNodes();
+	    	for (int i = 0; i < nl.getLength(); i++) {
+	    	    if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
+	    	        header.removeChild(nl.item(i));
+	    	    }
+	    	}
+	    	header.normalize();
+	
+	        // SOAP Message in bytes without MAC from Header
+	    	byte[] plainBytes = getMessage(smc).getBytes();
+	
+	        // SEGURANCA : MAC
+	    	// make MAC
+	    	byte[] cipherDigest = parseHexBinary(mac);
+	
+	        // verify the MAC
+	    	byte[] macKey = (byte[]) smc.get(MAC_KEY_REQUEST_PROPERTY);
+	    	boolean result = verifyMAC(macKey, cipherDigest, plainBytes);
+	    	System.out.println("\nMAC is " + (result ? "right" : "wrong"));
+	
+	    	return result;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	@Override

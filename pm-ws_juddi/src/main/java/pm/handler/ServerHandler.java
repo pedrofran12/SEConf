@@ -187,7 +187,28 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 	@Override
 	public boolean handleFault(SOAPMessageContext smc) {
 		// TODO Auto-generated method stub
-		return false;
+		Boolean outbound = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
+		if (!outbound) return true;
+		
+		try {
+			final byte[] plainBytes = getMessage(smc).getBytes();
+
+			// SEGURANCA : MAC
+			// make MAC
+			byte[] macKey = (byte[]) smc.get(MAC_KEY_REQUEST_PROPERTY);
+			System.out.println("outbound key: " + printHexBinary(macKey));
+			
+			byte[] mac = makeMAC(macKey, plainBytes);
+			addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(mac));
+			
+			System.out.println("\n\nFault detected:");
+			System.out.println(getMessage(smc));
+			
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	@Override
