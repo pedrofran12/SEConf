@@ -13,6 +13,7 @@ import java.util.Date;
 import java.net.URL;
 
 import javax.xml.soap.SOAPHeader;
+import javax.crypto.KeyAgreement;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.jws.HandlerChain;
@@ -43,8 +44,8 @@ import org.w3c.dom.NodeList;
 public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 	public static final String WRITE_IDENTIFIER_RESPONSE_PROPERTY = "write.identifer.property";
 
-	public static final String HEADER_DSIGN = "dsign";
-	public static final String HEADER_DSIGN_NS = "urn:dsign";
+	public static final String HEADER_MAC_DS = "mac-dsign";
+	public static final String HEADER_MAC_DS_NS = "urn:mac-dsign";
     
 	public static final String HEADER_MAC_KEY = "mac-key";
     public static final String HEADER_MAC_KEY_NS = "urn:mac-key"; 
@@ -112,10 +113,14 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
             	
             	// Generate MAC key for integrity purposes on the response message
             	byte[] macKey = generateMacKey();
-                addHeaderSM(smc, HEADER_MAC_KEY, HEADER_MAC_KEY_NS, printHexBinary(cipher(macKey)));
+            	byte[] macKeyCiphered = cipher(macKey);
+                addHeaderSM(smc, HEADER_MAC_KEY, HEADER_MAC_KEY_NS, printHexBinary(macKeyCiphered));
             	smc.put(MAC_KEY_REQUEST_PROPERTY, macKey);
             	smc.setScope(MAC_KEY_REQUEST_PROPERTY, Scope.HANDLER);
-                
+
+                addHeaderSM(smc, HEADER_MAC_DS, HEADER_MAC_DS_NS, printHexBinary(makeSignature(macKeyCiphered)));
+            	
+            	
                 // NONCE + Timestamp //
                 int nonce = generateNonce();
                 long ts = generateTimestamp();
@@ -126,12 +131,14 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 
                 final String plainText = getMessage(smc);
                 final byte[] plainBytes = plainText.getBytes();
-
+                
                 // SEGURANCA : DSIGN
                 // make DSIGN
-				byte[] cipherDigest = makeSignature(plainBytes);
-
-                addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(cipherDigest));
+				//byte[] cipherDigest = makeSignature(plainBytes);
+                byte[] mac = makeMAC(macKey, plainBytes);
+                
+                //addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(cipherDigest));
+                addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(mac));
                 System.out.println(getMessage(smc));
             } 
             else {

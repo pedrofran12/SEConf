@@ -60,7 +60,6 @@ public class Attacks_Test {
 		c = Client.main(new String[]{uddiName, name, faults});
 		c.init(getKeyStore("KeyStore-adolfo", "adolfo".toCharArray()), alias, aliasSymmetric, "adolfo".toCharArray());
 		c.register_user();
-
 	}
 
 	public static KeyStore getKeyStore(String fileName, char[] passwd) {

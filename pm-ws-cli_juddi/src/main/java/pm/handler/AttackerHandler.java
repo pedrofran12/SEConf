@@ -35,9 +35,12 @@ import pm.exception.cli.InvalidKeyStoreException;
 @HandlerChain(file = "/handler-chain.xml")
 public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 
-	public static final String HEADER_DSIGN = "dsign";
-	public static final String HEADER_DSIGN_NS = "urn:dsign";
+	//public static final String HEADER_DSIGN = "dsign";
+	//public static final String HEADER_DSIGN_NS = "urn:dsign";
 
+	public static final String HEADER_MAC = "mac";
+    public static final String HEADER_MAC_NS = "urn:mac";
+    
 	public static final String HEADER_NONCE = "nonce";
     public static final String HEADER_NONCE_NS = "urn:nonce";
     
@@ -69,7 +72,7 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 		        	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
 		        	NodeList nl = header.getChildNodes();
 		        	for (int i = 0; i < nl.getLength(); i++) {
-		        	    if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN)) {
+		        	    if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
 		        	        header.removeChild(nl.item(i));
 		        	    }
 		        	}
@@ -79,7 +82,7 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 				}
 				break;
 			case "dsign-change":
-				byte[] sig = parseHexBinary(getHeaderElement(smc, HEADER_DSIGN, HEADER_DSIGN_NS));
+				byte[] sig = parseHexBinary(getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS));
 				sig[0] = (byte) (sig[0] + 1);
 	            
 				// Remove from Header old DSIGN components
@@ -87,7 +90,7 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 		        	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
 		        	NodeList nl = header.getChildNodes();
 		        	for (int i = 0; i < nl.getLength(); i++) {
-		        	    if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN)) {
+		        	    if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
 		        	        header.removeChild(nl.item(i));
 		        	    }
 		        	}
@@ -97,10 +100,10 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 				}
 	
 				
-				addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(sig));
+				addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(sig));
 				break;
 			case "msg-change":
-				addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, "Hacked");
+				addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, "Hacked");
 				break;
 			
 		    case "replay-attack":
@@ -121,7 +124,7 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 			    	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
 					NodeList nl = header.getChildNodes();
 					for (int i = 0; i < nl.getLength(); i++) {
-						if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN) ||
+						if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC) ||
 								nl.item(i).getNodeName().equals("d:" + HEADER_WID)) {
 							header.removeChild(nl.item(i));
 						}
@@ -152,7 +155,7 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 	                // make DSIGN
 					byte[] cipherDigest = makeSignature(plainBytes);
 
-	                addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(cipherDigest));
+	                addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));
 		    	} catch (Exception e) {
 		    		e.printStackTrace();
 		    	}
