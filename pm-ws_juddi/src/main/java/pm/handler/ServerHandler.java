@@ -2,16 +2,12 @@ package pm.handler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.sql.Timestamp;
-import java.security.Key;
 import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
@@ -20,7 +16,6 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Date;
 
-import javax.crypto.KeyAgreement;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.soap.*;
@@ -30,7 +25,6 @@ import javax.xml.ws.handler.soap.*;
 
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
-import org.omg.Messaging.SyncScopeHelper;
 import org.w3c.dom.NodeList;
 
 import pm.ws.SecureServer;
@@ -131,7 +125,6 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
 				NodeList nl = header.getChildNodes();
 				for (int i = 0; i < nl.getLength(); i++) {
-					//if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN)) {
 					if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
 						header.removeChild(nl.item(i));
 					}
@@ -148,9 +141,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				//Generate's DSIGN
 				byte[] cipherDigest = parseHexBinary(mac);
 
-				// verify the DSIGN
-				//boolean result = verifySignature(publicKeyClient, cipherDigest, plainBytes);
-				
+				// verify MAC and DSIGN
 				boolean result = verifyMAC(macKey, cipherDigest, plainBytes) && 
 						verifySignature(publicKeyClient, parseHexBinary(dsign), parseHexBinary(macKeyCipheredText));
 				System.out.println("MAC is " + (result ? "right" : "wrong"));

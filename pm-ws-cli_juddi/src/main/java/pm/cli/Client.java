@@ -2,11 +2,7 @@ package pm.cli;
 
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.security.KeyStore;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Map;
 
 import javax.xml.ws.BindingProvider;

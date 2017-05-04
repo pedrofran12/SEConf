@@ -3,10 +3,7 @@ package pm.cli;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
-import java.nio.ByteBuffer;
-import java.security.Key;
 import java.security.KeyStore;
-import java.util.Arrays;
 import java.util.List;
 
 import pm.exception.cli.AlreadyExistsLoggedUserException;
@@ -24,7 +21,6 @@ import pm.ws.InvalidUsernameException_Exception;
 import pm.ws.KeyAlreadyExistsException_Exception;
 import pm.ws.PasswordManager;
 import pm.ws.UnknownUsernameDomainException_Exception;
-import utilities.ObjectUtil;
 
 public class ClientLib extends ClientLibReplicated {
 
@@ -33,7 +29,7 @@ public class ClientLib extends ClientLibReplicated {
 		super(pmList, f);
 	}
 
-	public void init(KeyStore ks, String alias, String aliasSymmetric, char[] password) throws ClientException {
+	public void init(KeyStore ks, String alias, char[] password) throws ClientException {
 		if (isSessionAlive())
 			throw new AlreadyExistsLoggedUserException();
 		if (ks == null || alias == null || password == null)
@@ -42,7 +38,6 @@ public class ClientLib extends ClientLibReplicated {
 		setKeyStoreAlias(alias);
 		setKeyStorePassword(password);
 		ClientHandler.setHandler(ks, alias, password);
-		//setSymmetricKey(ks, aliasSymmetric, password);
 	}
 
 	public void register_user()
@@ -66,7 +61,6 @@ public class ClientLib extends ClientLibReplicated {
 			throw new InvalidPasswordException();
 		byte[] hashedDomain = hash(domain);
 		byte[] hashedUsername = hash(domain, username);
-		//byte[] hashedPassword = passwordHash(password, domain, username);
 		byte[] cipheredPassword = cipher(password);
 		int wid = -1;
 		try {

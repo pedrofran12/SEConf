@@ -1,7 +1,6 @@
 package pm.ws.triplet;
 
 import java.io.Serializable;
-import java.security.Key;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -10,7 +9,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import pm.exception.*;
-import pm.handler.ServerHandler;
 import pm.ws.SecureServer;
 
 public class TripletStore implements Serializable {
@@ -79,28 +77,17 @@ public class TripletStore implements Serializable {
 		}
 		return null;
 	}
-	private byte[] generateFormWidMac(int wid, int tie, byte[]... values) {
-		String toMake = wid + WID_SEPARATOR + tie;
-		for (byte[] value : values) {
-			toMake += WID_SEPARATOR + Base64.getEncoder().encodeToString(value);
-		}
-		return toMake.getBytes();
-	}
 	
 	
 	private boolean verifySignature(String signatureString, int wid, int tie, byte[]... values) {
 		try {
-			//byte[] bytesForMac = generateFormWidMac(wid, tie, values);
-			//byte[] bytesForSignature = generateFormWidMac(wid, tie, values);
 			String toMake = wid + WID_SEPARATOR + tie;
 			for (byte[] value : values) {
 				toMake += WID_SEPARATOR + Base64.getEncoder().encodeToString(value);
 			}
 			byte[] bytesForSignature = toMake.getBytes();
 			
-			//byte[] mac = Base64.getDecoder().decode(macString);
 			byte[] signature = Base64.getDecoder().decode(signatureString);
-			//return SecureClient.verifyMAC(symmetricKey, mac, bytesForMac);
 			return SecureServer.verifySignature(clientPublicKey, signature, bytesForSignature);
 		} catch (Exception e) {
 			return false;

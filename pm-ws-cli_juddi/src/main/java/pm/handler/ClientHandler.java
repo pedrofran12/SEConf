@@ -2,7 +2,6 @@ package pm.handler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.KeyFactory;
@@ -13,7 +12,6 @@ import java.util.Date;
 import java.net.URL;
 
 import javax.xml.soap.SOAPHeader;
-import javax.crypto.KeyAgreement;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.jws.HandlerChain;
@@ -32,7 +30,6 @@ import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.sql.Timestamp;
 
@@ -51,7 +48,7 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
     public static final String HEADER_MAC_KEY_NS = "urn:mac-key"; 
     
 	public static final String HEADER_MAC = "mac";
-    public static final String HEADER_MAC_NS = "urn:mac";     
+    public static final String HEADER_MAC_NS = "urn:mac";
 	
     public static final String HEADER_NONCE = "nonce";
     public static final String HEADER_NONCE_NS = "urn:nonce";
@@ -132,12 +129,10 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
                 final String plainText = getMessage(smc);
                 final byte[] plainBytes = plainText.getBytes();
                 
-                // SEGURANCA : DSIGN
-                // make DSIGN
-				//byte[] cipherDigest = makeSignature(plainBytes);
+                // SEGURANCA : MAC
+                // make MAC
                 byte[] mac = makeMAC(macKey, plainBytes);
                 
-                //addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(cipherDigest));
                 addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(mac));
                 System.out.println(getMessage(smc));
             } 
@@ -243,7 +238,6 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 	@Override
 	public void close(MessageContext context) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override

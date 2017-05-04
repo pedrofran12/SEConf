@@ -3,13 +3,15 @@ package pm.handler;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.security.Key;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.util.Base64;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.jws.HandlerChain;
 import javax.xml.soap.*;
 import javax.xml.ws.handler.MessageContext;
@@ -29,14 +31,10 @@ import org.w3c.dom.NodeList;
 
 import pm.cli.ClientLibReplicated;
 import pm.cli.SecureClient;
-import pm.exception.cli.InvalidKeyStoreException;
 
 
 @HandlerChain(file = "/handler-chain.xml")
 public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
-
-	//public static final String HEADER_DSIGN = "dsign";
-	//public static final String HEADER_DSIGN_NS = "urn:dsign";
 
 	public static final String HEADER_MAC = "mac";
     public static final String HEADER_MAC_NS = "urn:mac";
@@ -50,12 +48,21 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
     public static final String HEADER_WID = "writeid";
     public static final String HEADER_WID_NS = "urn:writeid";
 
-	private static String TYPE_OF_ATTACK = "";	
+    public static final String MAC_KEY_REQUEST_PROPERTY = "mac.key.request.property";
+
+	private static String TYPE_OF_ATTACK = "";
+	private static PrivateKey _privateKey;
+	private static final String WID_SEPARATOR = ":";
 	
 	private static SOAPMessageContext oldSmc = null;
 	
 	public static void setHandler(String typeOfAttack){
 		TYPE_OF_ATTACK = typeOfAttack;
+	}
+	
+	public static void setHandler(String typeOfAttack, PrivateKey privateKey){
+		setHandler(typeOfAttack);
+		_privateKey = privateKey;
 	}
 
 	@Override
@@ -66,39 +73,16 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 		getMessage(smc);
 		if(outbound){
 			switch (TYPE_OF_ATTACK) {
-			case "dsign-remove":
-				// Remove from Header old DSIGN components
-				try {
-		        	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
-		        	NodeList nl = header.getChildNodes();
-		        	for (int i = 0; i < nl.getLength(); i++) {
-		        	    if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
-		        	        header.removeChild(nl.item(i));
-		        	    }
-		        	}
-		        	header.normalize();
-	        	} catch (SOAPException e) {
-					e.printStackTrace();
-				}
+			case "mac-remove":
+				// Remove from Header old MAC components
+				removeMAC(smc);
 				break;
-			case "dsign-change":
+			case "mac-change":
 				byte[] sig = parseHexBinary(getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS));
 				sig[0] = (byte) (sig[0] + 1);
 	            
-				// Remove from Header old DSIGN components
-				try {
-		        	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
-		        	NodeList nl = header.getChildNodes();
-		        	for (int i = 0; i < nl.getLength(); i++) {
-		        	    if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
-		        	        header.removeChild(nl.item(i));
-		        	    }
-		        	}
-		        	header.normalize();
-	        	} catch (SOAPException e) {
-					e.printStackTrace();
-				}
-	
+				// Remove from Header old MAC components
+				removeMAC(smc);
 				
 				addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(sig));
 				break;
@@ -114,13 +98,12 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 				break;
 				
 		    case "change-wid-value":
-		    case "change-wid-force":
 		    case "tie-break-high":
 		    case "tie-break-low":
 		    	if (!operation.endsWith("put")) return true;
 		    	try {
 		    		String wid = getHeaderElement(smc, HEADER_WID, HEADER_WID_NS);
-			    	// 1. remover dsing
+			    	// 1. remover mac
 			    	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
 					NodeList nl = header.getChildNodes();
 					for (int i = 0; i < nl.getLength(); i++) {
@@ -130,32 +113,32 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 						}
 					}
 					header.normalize();
+					
 			    	// 2. novo wid
-					if (TYPE_OF_ATTACK.equals("change-wid-force")) {
-						wid = "1000:" + wid.split(":", 2)[1];
-					} else {
-						byte[] domain = Base64.getDecoder().decode(getBodyElement(smc, "arg1").getBytes());
-						byte[] username = Base64.getDecoder().decode(getBodyElement(smc, "arg2").getBytes());
-						byte[] password = Base64.getDecoder().decode(getBodyElement(smc, "arg3").getBytes());
-						int i = 0;
-						int t = 618276;
-						if (TYPE_OF_ATTACK.startsWith("tie-break")) {
-							t = TYPE_OF_ATTACK.endsWith("high") ? Integer.MAX_VALUE : -1;
-							i = Integer.parseInt(wid.split(":", 2)[0]) - 1;
-						}
-						String mac = makeMac(i, t, domain, username, password);
-						wid = i + ":" + t + ":" + mac;
+					byte[] domain = Base64.getDecoder().decode(getBodyElement(smc, "arg1").getBytes());
+					byte[] username = Base64.getDecoder().decode(getBodyElement(smc, "arg2").getBytes());
+					byte[] password = Base64.getDecoder().decode(getBodyElement(smc, "arg3").getBytes());
+					int i = 0;
+					int t = 618276;
+					if (TYPE_OF_ATTACK.startsWith("tie-break")) {
+						t = TYPE_OF_ATTACK.endsWith("high") ? Integer.MAX_VALUE : -1;
+						i = Integer.parseInt(wid.split(":", 2)[0]) - 1;
 					}
+					String signature = makeSignature(i, t, domain, username, password);
+					wid = i + WID_SEPARATOR + t + WID_SEPARATOR + signature;
+					
 					addHeaderSM(smc, HEADER_WID,HEADER_WID_NS, wid);
-			    	// 3. recriar dsing
+					
+			    	// 3. recriar mac
 					final String plainText = getMessage(smc);
 	                final byte[] plainBytes = plainText.getBytes();
+	                byte[] macKey = (byte[]) smc.get(MAC_KEY_REQUEST_PROPERTY);
 
-	                // SEGURANCA : DSIGN
-	                // make DSIGN
-					byte[] cipherDigest = makeSignature(plainBytes);
+	                // SEGURANCA : MAC
+	                // make MAC
+	                byte[] mac = makeMAC(macKey, plainBytes);
 
-	                addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(cipherDigest));
+	                addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(mac));
 		    	} catch (Exception e) {
 		    		e.printStackTrace();
 		    	}
@@ -199,6 +182,21 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 	public void close(MessageContext context) {
 		// TODO Auto-generated method stub
 
+	}
+	
+	private void removeMAC(SOAPMessageContext smc) {
+		try {
+        	SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
+        	NodeList nl = header.getChildNodes();
+        	for (int i = 0; i < nl.getLength(); i++) {
+        	    if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
+        	        header.removeChild(nl.item(i));
+        	    }
+        	}
+        	header.normalize();
+    	} catch (SOAPException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -367,31 +365,6 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 		}
 	}
 	
-	private String makeMac(int wid, int tie, byte[]... values) {
-		try {
-			String toMake = wid + ":" + tie;
-			for (byte[] value : values) {
-				toMake += ":" + Base64.getEncoder().encodeToString(value);
-			}
-			byte[] bytesForMac = toMake.getBytes();
-			byte[] mac = SecureClient.makeMAC(getSymetricKey(), bytesForMac);
-			return Base64.getEncoder().encodeToString(mac);
-		} catch (Exception e) {
-			return null;
-		}
-	}
-	
-	private Key getSymetricKey() {
-		String alias = "clienthmac";
-		char[] password = "seconf".toCharArray();
-		KeyStore keystore = getKeyStore("KeyStore-seconf", password);
-		try {
-			return SecureClient.getSymmetricKey(keystore, alias, password);
-		} catch (Exception e) {
-			return null;
-		}
-	}
-	
 	public KeyStore getKeyStore(String fileName, char[] passwd) {
 		KeyStore k = null;
 		try {
@@ -442,5 +415,24 @@ public class AttackerHandler implements SOAPHandler<SOAPMessageContext> {
 			}
 		}
 		return null;
+	}
+	
+	private String makeSignature(int wid, int tie, byte[]... values) {
+		try {
+			String toMake = wid + WID_SEPARATOR + tie;
+			for (byte[] value : values) {
+				toMake += WID_SEPARATOR + Base64.getEncoder().encodeToString(value);
+			}
+			byte[] bytesForSignature = toMake.getBytes();
+			byte[] signature = SecureClient.makeSignature(_privateKey, bytesForSignature);
+			return Base64.getEncoder().encodeToString(signature);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	private byte[] makeMAC(byte[] secretKeyByte, byte[] data) throws Exception{
+		SecretKey key = new SecretKeySpec(secretKeyByte, 0, secretKeyByte.length, SecureClient.MAC);
+		return SecureClient.makeMAC(key, data);
 	}
 }

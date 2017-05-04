@@ -2,14 +2,11 @@ package pm.cli;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
-import java.io.ByteArrayOutputStream;
-import java.security.Key;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +17,6 @@ import javax.xml.ws.Response;
 
 import com.sun.xml.ws.client.ClientTransportException;
 
-import pm.exception.cli.AlreadyExistsLoggedUserException;
-import pm.exception.cli.ClientException;
 import pm.exception.cli.InsufficientResponsesException;
 import pm.exception.cli.InvalidKeyStoreException;
 import pm.exception.cli.InvalidPasswordException;
@@ -57,13 +52,6 @@ public abstract class ClientLibReplicated {
 		tieBreaker = new SecureRandom().nextInt(Integer.MAX_VALUE);
 	}
 	
-	/*protected void setSymmetricKey(KeyStore keystore, String alias, char[] password) throws InvalidKeyStoreException {
-		try {
-			symmetricKey = SecureClient.getSymmetricKey(keystore, alias, password);
-		} catch (Exception e) {
-			throw new InvalidKeyStoreException();
-		}
-	}*/
 	
 	// replicated register
 	public void register() throws InsufficientResponsesException,
@@ -78,7 +66,6 @@ public abstract class ClientLibReplicated {
 		ExecutionException exception = null;
 		long current = System.currentTimeMillis();
 		while(numberResponses < 2*number_tolerating_faults + 1){
-			// to see exception
 			if (System.currentTimeMillis() - current > WAITING_TIME || // waiting time exceeded
 					responsesList.isEmpty()) { // no more servers to communicate
 				throw new InsufficientResponsesException();
@@ -136,10 +123,8 @@ public abstract class ClientLibReplicated {
 			InvalidPasswordException_Exception, InvalidKeyStoreException {
 		
 		// create wid signature
-		//String widMac = makeMac(wid, tieBreaker, domain, username, password);
 		String widSignature = makeSignature(wid, tieBreaker, domain, username, password);
 		
-		//String widForm = wid + WID_SEPARATOR + tieBreaker + WID_SEPARATOR + widMac;
 		String widForm = wid + WID_SEPARATOR + tieBreaker + WID_SEPARATOR + widSignature;
 		put(domain, username, password, widForm);
 	}
@@ -164,7 +149,6 @@ public abstract class ClientLibReplicated {
 		ExecutionException exception = null;
 		long current = System.currentTimeMillis();
 		while(numberResponses < 2*number_tolerating_faults + 1){
-			// to see exception
 			if (System.currentTimeMillis() - current > WAITING_TIME || // waiting time exceeded
 					responsesList.isEmpty()) { // no more servers to communicate
 				throw new InsufficientResponsesException();
@@ -236,7 +220,6 @@ public abstract class ClientLibReplicated {
         ExecutionException exception = null;
         long current = System.currentTimeMillis();
 		while(numberResponses < 2*number_tolerating_faults + 1){
-			// to see exception
 			if (System.currentTimeMillis() - current > WAITING_TIME || // waiting time exceeded
 					responsesList.isEmpty()) { // no more servers to communicate
 				throw new InsufficientResponsesException();
@@ -257,11 +240,9 @@ public abstract class ClientLibReplicated {
 	                    String[] splited = widForm.split(WID_SEPARATOR, 3);;
 	                    int wid = Integer.parseInt(splited[0]);
 	                    int tie = Integer.parseInt(splited[1]);
-	                    //String widMac = splited[2];
 	                    String widSignature = splited[2];
 	                    
 	                    // verify signature
-	                    //if (!verifyMac(widMac, wid, tie, domain, username, content))
 	                    if (!verifySignature(widSignature, wid, tie, domain, username, content))
 	                    	throw new ExecutionException(new InvalidPasswordException());
 	                    
@@ -311,7 +292,7 @@ public abstract class ClientLibReplicated {
 		return new GetResponseWrapper(lastVersionContent, lastestForm);
 	}
 	
-	private byte[] generateFormWidMac(int wid, int tie, byte[]... values) {
+	private byte[] generateFormWidSignature(int wid, int tie, byte[]... values) {
 		String toMake = wid + WID_SEPARATOR + tie;
 		for (byte[] value : values) {
 			toMake += WID_SEPARATOR + Base64.getEncoder().encodeToString(value);
@@ -319,32 +300,9 @@ public abstract class ClientLibReplicated {
 		return toMake.getBytes();
 	}
 	
-	/*private String makeMac(int wid, int tie, byte[]... values) {
-		try {
-			byte[] bytesForMac = generateFormWidMac(wid, tie, values);
-			byte[] mac = SecureClient.makeMAC(symmetricKey, bytesForMac);
-			return Base64.getEncoder().encodeToString(mac);
-		} catch (Exception e) {
-			return null;
-		}
-	}
-	
-	private boolean verifyMac(String macString, int wid, int tie, byte[]... values) {
-		try {
-			byte[] bytesForMac = generateFormWidMac(wid, tie, values);
-			byte[] mac = Base64.getDecoder().decode(macString);
-			return SecureClient.verifyMAC(symmetricKey, mac, bytesForMac);
-		} catch (Exception e) {
-			return false;
-		}
-	}*/
-	
-	
-	
 	private String makeSignature(int wid, int tie, byte[]... values) {
 		try {
-			//byte[] bytesForMac = generateFormWidMac(wid, tie, values);
-			byte[] bytesForSignature = generateFormWidMac(wid, tie, values);
+			byte[] bytesForSignature = generateFormWidSignature(wid, tie, values);
 			byte[] signature = SecureClient.makeSignature(getPrivateKey(), bytesForSignature);
 			return Base64.getEncoder().encodeToString(signature);
 		} catch (Exception e) {
@@ -354,11 +312,8 @@ public abstract class ClientLibReplicated {
 	
 	private boolean verifySignature(String signatureString, int wid, int tie, byte[]... values) {
 		try {
-			//byte[] bytesForMac = generateFormWidMac(wid, tie, values);
-			byte[] bytesForSignature = generateFormWidMac(wid, tie, values);
-			//byte[] mac = Base64.getDecoder().decode(macString);
+			byte[] bytesForSignature = generateFormWidSignature(wid, tie, values);
 			byte[] signature = Base64.getDecoder().decode(signatureString);
-			//return SecureClient.verifyMAC(symmetricKey, mac, bytesForMac);
 			return SecureClient.verifySignature(getPublicKey(), signature, bytesForSignature);
 		} catch (Exception e) {
 			return false;
