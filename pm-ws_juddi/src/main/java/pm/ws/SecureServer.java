@@ -16,7 +16,7 @@ import javax.crypto.Mac;
 
 public class SecureServer{
 	
-	public static final String CIPHER_ALGORITHM = "RSA";
+	public static final String CIPHER_ALGORITHM = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
 	public static final String HASH_ALGORITHM = "SHA-256";
 	private static final String DIGITAL_SIGNATURE = "SHA256withRSA";
 	public static final String MAC = "HmacSHA256";

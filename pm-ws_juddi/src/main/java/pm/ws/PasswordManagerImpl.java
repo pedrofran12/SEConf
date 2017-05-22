@@ -1,6 +1,7 @@
 package pm.ws;
 
 import java.io.Serializable;
+import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.FileHandler;
@@ -43,12 +44,12 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	}
 
 	public void register(Key publicKey) throws InvalidKeyException, KeyAlreadyExistsException {
-		java.security.Key key = keyToKey(publicKey);
+		PublicKey key = keyToKey(publicKey);
 		try {
 			if (password.containsKey(key)) {
 				throw new KeyAlreadyExistsException();
 			}
-			password.put(key, new TripletStore());
+			password.put(key, new TripletStore(key));
 			daemonSaveState();
 			log("register", key);
 
@@ -62,7 +63,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 
 	public void put(Key publicKey, byte[] domain, byte[] username, byte[] password)
 			throws InvalidKeyException, InvalidDomainException, InvalidUsernameException, InvalidPasswordException {
-		java.security.Key key = keyToKey(publicKey);
+		PublicKey key = keyToKey(publicKey);
 		try{
 			TripletStore ts = getTripletStore(key);
 
@@ -86,7 +87,7 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 
 	public byte[] get(Key publicKey, byte[] domain, byte[] username) throws InvalidKeyException, InvalidDomainException,
 			InvalidUsernameException, UnknownUsernameDomainException {
-		java.security.Key key = keyToKey(publicKey);
+		PublicKey key = keyToKey(publicKey);
 		try{
 			TripletStore ts = getTripletStore(key);
 			Triplet t = ts.get(domain, username);
@@ -108,19 +109,19 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 		}
 	}
 
-	private TripletStore getTripletStore(java.security.Key k) throws InvalidKeyException {
+	private TripletStore getTripletStore(PublicKey k) throws InvalidKeyException {
 		TripletStore ts = password.get(k);
 		if (ts == null) {
 			if (!AUTO_REGISTER)
 				throw new InvalidKeyException();
-			ts = new TripletStore();
+			ts = new TripletStore(k);
 			password.put(k, ts);
 		}
 		return ts;
 	}
 
-	private java.security.Key keyToKey(Key k) throws InvalidKeyException {
-		return ObjectUtil.readObjectBytes(k.getKey(), java.security.Key.class);
+	private PublicKey keyToKey(Key k) throws InvalidKeyException {
+		return ObjectUtil.readObjectBytes(k.getKey(), java.security.PublicKey.class);
 	}
 
 	private void daemonSaveState() {
@@ -135,7 +136,6 @@ public class PasswordManagerImpl implements PasswordManager, Serializable {
 	private synchronized void saveState() {
 		String fileName = String.format(SAVE_STATE_NAME, port);
 		boolean saved = ObjectUtil.writeObjectFile(fileName, this);
-		//boolean saved = true;
 		if (saved) {
 			System.out.println(">>> Saved state");
 		} else {

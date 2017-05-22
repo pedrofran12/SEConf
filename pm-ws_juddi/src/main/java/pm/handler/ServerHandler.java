@@ -2,16 +2,12 @@ package pm.handler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.sql.Timestamp;
-import java.security.Key;
 import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
@@ -29,7 +25,6 @@ import javax.xml.ws.handler.soap.*;
 
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
-import org.omg.Messaging.SyncScopeHelper;
 import org.w3c.dom.NodeList;
 
 import pm.ws.SecureServer;
@@ -42,9 +37,9 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 	public static final String MAC_KEY_REQUEST_PROPERTY = "mac.key.request.property";
 	public static final String WRITE_IDENTIFIER_RESPONSE_PROPERTY = "write.identifer.property";
 	
-    public static final String HEADER_DSIGN = "dsign";
-    public static final String HEADER_DSIGN_NS = "urn:dsign";
-	
+	public static final String HEADER_MAC_DS = "mac-dsign";
+	public static final String HEADER_MAC_DS_NS = "urn:mac-dsign";
+    
     public static final String HEADER_MAC_KEY = "mac-key";
     public static final String HEADER_MAC_KEY_NS = "urn:mac-key"; 
     
@@ -112,12 +107,17 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 			else {
 				// message that is going to be sent from client to server
 				System.out.println(getMessage(smc));
+				
+                //Get generated mac key of client
+                String macKeyCipheredText = getHeaderElement(smc, HEADER_MAC_KEY, HEADER_MAC_KEY_NS);
+				byte[] macKey = decipher(parseHexBinary(macKeyCipheredText));
 			   	
 				//Get DSIGN value
-				String dsign = getHeaderElement(smc, HEADER_DSIGN, HEADER_DSIGN_NS);
+				String mac = getHeaderElement(smc, HEADER_MAC, HEADER_MAC_NS);
+				String dsign = getHeaderElement(smc, HEADER_MAC_DS, HEADER_MAC_DS_NS);
 
 				//SOAP Message does not have DSIGN
-				if (dsign == null) {
+				if (mac == null) {
 					return false;
 				}
 
@@ -125,7 +125,7 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 				SOAPHeader header = smc.getMessage().getSOAPPart().getEnvelope().getHeader();
 				NodeList nl = header.getChildNodes();
 				for (int i = 0; i < nl.getLength(); i++) {
-					if (nl.item(i).getNodeName().equals("d:" + HEADER_DSIGN)) {
+					if (nl.item(i).getNodeName().equals("d:" + HEADER_MAC)) {
 						header.removeChild(nl.item(i));
 					}
 				}
@@ -136,14 +136,15 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
 
 				//Client's Key
 				byte[] byteElement = getBodyElement(smc, "key").getBytes();
-				byte[] publicKeyClient = Base64.getDecoder().decode(byteElement);
-
+				byte[] publicKeyClient = Base64.getDecoder().decode(byteElement);				
+				
 				//Generate's DSIGN
-				byte[] cipherDigest = parseHexBinary(dsign);
+				byte[] cipherDigest = parseHexBinary(mac);
 
-				// verify the DSIGN
-				boolean result = verifySignature(publicKeyClient, cipherDigest, plainBytes);
-				System.out.println("DSIGN is " + (result ? "right" : "wrong"));
+				// verify MAC and DSIGN
+				boolean result = verifyMAC(macKey, cipherDigest, plainBytes) && 
+						verifySignature(publicKeyClient, parseHexBinary(dsign), parseHexBinary(macKeyCipheredText));
+				System.out.println("MAC is " + (result ? "right" : "wrong"));
 
 				if (!result) {
 					return false;
@@ -159,13 +160,11 @@ public class ServerHandler implements SOAPHandler<SOAPMessageContext> {
                     System.out.println(">>> Replay attack detected");
                 	return false;
                 }
-                
-                //Get generated mac key of client
-                String macKeyCipheredText = getHeaderElement(smc, HEADER_MAC_KEY, HEADER_MAC_KEY_NS);
-				byte[] macKey = decipher(parseHexBinary(macKeyCipheredText));
-				smc.put(MAC_KEY_REQUEST_PROPERTY, macKey);
-				smc.setScope(MAC_KEY_REQUEST_PROPERTY, Scope.HANDLER);	
 
+                //Save MAC key
+				smc.put(MAC_KEY_REQUEST_PROPERTY, macKey);
+				smc.setScope(MAC_KEY_REQUEST_PROPERTY, Scope.HANDLER);
+                
 				// receive write identifier 
                 if (operation.endsWith("put")) {
 	                String wid = getHeaderElement(smc, HEADER_WID, HEADER_WID_NS);

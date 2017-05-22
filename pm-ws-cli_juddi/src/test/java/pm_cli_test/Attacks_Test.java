@@ -1,7 +1,5 @@
 package pm_cli_test;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -13,19 +11,10 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.project.MavenProject;
 import org.junit.*;
-import static org.junit.Assert.*;
 
 import pm.cli.Client;
 import pm.cli.ClientLib;
-import pm.exception.cli.ClientException;
-import pm.exception.cli.InvalidPasswordException;
 import pm.handler.AttackerHandler;
-import pm.ws.InvalidKeyException_Exception;
-import pm.ws.KeyAlreadyExistsException_Exception;
-import pm.ws.PasswordManager;
-import pm.ws.PasswordManagerImplService;
-
-import pt.ulisboa.tecnico.seconf.ws.uddi.UDDINaming;
 
 /**
  * Integration Test suite
@@ -34,7 +23,6 @@ public class Attacks_Test {
 
 	private static ClientLib c;
 	private static String alias = "client";
-	private static String aliasSymmetric = "clienthmac";
 
 	
 	@BeforeClass
@@ -58,9 +46,7 @@ public class Attacks_Test {
 		
 		
 		c = Client.main(new String[]{uddiName, name, faults});
-		c.init(getKeyStore("KeyStore-adolfo", "adolfo".toCharArray()), alias, aliasSymmetric, "adolfo".toCharArray());
-		c.register_user();
-
+		c.init(getKeyStore("KeyStore-adolfo", "adolfo".toCharArray()), alias, "adolfo".toCharArray());
 	}
 
 	public static KeyStore getKeyStore(String fileName, char[] passwd) {
@@ -86,16 +72,16 @@ public class Attacks_Test {
 	// Reborn's Tests \\
 	// ************************************************\\
 	@Test(expected = Exception.class)
-	public void testClient_dsign_remove() throws Exception {
-		AttackerHandler.setHandler("dsign-remove");
+	public void testClient_mac_remove() throws Exception {
+		AttackerHandler.setHandler("mac-remove");
 		
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
 		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
 	}
 	
 	@Test(expected = Exception.class)
-	public void testClient_dsign_change() throws Exception {
-		AttackerHandler.setHandler("dsign-change");
+	public void testClient_mac_change() throws Exception {
+		AttackerHandler.setHandler("mac-change");
 
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
 		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
@@ -121,6 +107,6 @@ public class Attacks_Test {
 		AttackerHandler.setHandler("password-change");
 
 		c.save_password("facebook.com".getBytes(), "reborn".getBytes(), "reborn_pwd".getBytes());
-		byte[] passwd = c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
+		c.retrieve_password("facebook.com".getBytes(), "reborn".getBytes());
 	}
 }

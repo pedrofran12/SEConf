@@ -2,7 +2,6 @@ package pm.handler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.KeyFactory;
@@ -31,7 +30,6 @@ import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.sql.Timestamp;
 
@@ -43,14 +41,14 @@ import org.w3c.dom.NodeList;
 public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 	public static final String WRITE_IDENTIFIER_RESPONSE_PROPERTY = "write.identifer.property";
 
-	public static final String HEADER_DSIGN = "dsign";
-	public static final String HEADER_DSIGN_NS = "urn:dsign";
+	public static final String HEADER_MAC_DS = "mac-dsign";
+	public static final String HEADER_MAC_DS_NS = "urn:mac-dsign";
     
 	public static final String HEADER_MAC_KEY = "mac-key";
     public static final String HEADER_MAC_KEY_NS = "urn:mac-key"; 
     
 	public static final String HEADER_MAC = "mac";
-    public static final String HEADER_MAC_NS = "urn:mac";     
+    public static final String HEADER_MAC_NS = "urn:mac";
 	
     public static final String HEADER_NONCE = "nonce";
     public static final String HEADER_NONCE_NS = "urn:nonce";
@@ -112,10 +110,14 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
             	
             	// Generate MAC key for integrity purposes on the response message
             	byte[] macKey = generateMacKey();
-                addHeaderSM(smc, HEADER_MAC_KEY, HEADER_MAC_KEY_NS, printHexBinary(cipher(macKey)));
+            	byte[] macKeyCiphered = cipher(macKey);
+                addHeaderSM(smc, HEADER_MAC_KEY, HEADER_MAC_KEY_NS, printHexBinary(macKeyCiphered));
             	smc.put(MAC_KEY_REQUEST_PROPERTY, macKey);
             	smc.setScope(MAC_KEY_REQUEST_PROPERTY, Scope.HANDLER);
-                
+
+                addHeaderSM(smc, HEADER_MAC_DS, HEADER_MAC_DS_NS, printHexBinary(makeSignature(macKeyCiphered)));
+            	
+            	
                 // NONCE + Timestamp //
                 int nonce = generateNonce();
                 long ts = generateTimestamp();
@@ -126,12 +128,12 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 
                 final String plainText = getMessage(smc);
                 final byte[] plainBytes = plainText.getBytes();
-
-                // SEGURANCA : DSIGN
-                // make DSIGN
-				byte[] cipherDigest = makeSignature(plainBytes);
-
-                addHeaderSM(smc, HEADER_DSIGN, HEADER_DSIGN_NS, printHexBinary(cipherDigest));
+                
+                // SEGURANCA : MAC
+                // make MAC
+                byte[] mac = makeMAC(macKey, plainBytes);
+                
+                addHeaderSM(smc, HEADER_MAC, HEADER_MAC_NS, printHexBinary(mac));
                 System.out.println(getMessage(smc));
             } 
             else {
@@ -236,7 +238,6 @@ public class ClientHandler implements SOAPHandler<SOAPMessageContext> {
 	@Override
 	public void close(MessageContext context) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
